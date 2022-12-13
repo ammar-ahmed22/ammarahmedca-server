@@ -30,6 +30,7 @@ type Query {
   skillTypes: [String!]!
   user: User!
   getUserByID(userId: String!): User!
+  testMovePlayerEmail: String!
   game(gameID: String!): Game!
   games: [Game!]!
 }
