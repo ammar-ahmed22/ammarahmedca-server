@@ -16,6 +16,7 @@ import {
 import { AuthPayload } from "../../utils/auth";
 import GameModel, { BoardOptsInput, Game, ExecutedMoveInput } from "../../models/Game";
 import UserModel from "../../models/User";
+import transporter, { readHTML, insertParams, getParamNames } from "../../utils/mail";
 
 @ArgsType()
 class AddMoveArgs {
@@ -44,8 +45,63 @@ class CreateGameResponse{
   gameID: string
 }
 
+type SendMovePlayerEmailOpts = {
+  email: string,
+  opponentName: string,
+  piece: string,
+  from: string,
+  to: string,
+  gameID: string,
+  takenPiece?: string
+}
+
 @Resolver(of => Game)
 export class GameResolver {
+  constructor(private mailer = transporter){}
+
+  private sendMovePlayerEmail = async ({ email, opponentName, from, to, piece, gameID, takenPiece} : SendMovePlayerEmailOpts) => {
+    const html = readHTML("../emails/move-played.html");
+    // params: opponent, piece, to, takeDescription, linkToGame, from
+    const params : Record<string, any> = {
+      opponent: opponentName,
+      piece,
+      from,
+      to,
+      linkToGame: `${process.env.NODE_ENV === "production" ? "https://ammarahmed.ca" : "http://localhost:3000"}/chess/play/${gameID}`,
+      takeDescription: takenPiece ? ` and took your ${takenPiece}` : "",
+    }
+    const updated = insertParams(html, params);
+    console.log(getParamNames(html));
+    this.mailer.sendMail({
+      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+      to: email,
+      subject: `${opponentName} Played Their Move!`,
+      text: "Plain text is not supported yet :(",
+      html: updated,
+    })
+  }
+
+  private getOpponentGameID = (userID: string, playerIDs: { white: string, black: string }) => playerIDs.white === userID ? playerIDs.black : playerIDs.white;
+
+  private toAlgebraic = (a : { rank: number, file: string }) => {
+    return `${a.file}${a.rank}`
+  }
+
+  @Query(returns => String)
+  async testMovePlayerEmail(){
+    await this.sendMovePlayerEmail({
+      email: "ammar.ahmed2203@gmail.com",
+      opponentName: "Yoski",
+      piece: "queen",
+      from: "e4",
+      to: "e5",
+      gameID: "ajsdfgjsgjsjdfg",
+      takenPiece: "knight"
+    });
+
+    return "success"
+  }
+
   @Authorized()
   @Mutation(returns => CreateGameResponse)
   async createGame(@Ctx() ctx: Context) {
@@ -83,7 +139,7 @@ export class GameResolver {
   ) {
     const user = await UserModel.findById(ctx.userId);
 
-    if (!user) throw new Error("Not found.");
+    if (!user) throw new Error("User not found.");
     if (!user.gameIDs.includes(gameID)) throw new Error("Game not available.")
     // if (!gameID && !user.currentGameID) throw new Error("No active game.");
 
@@ -91,12 +147,27 @@ export class GameResolver {
 
     if (!game) throw new Error("Game not found.");
 
-    // no last move = first move
-    const lastMove = game.moves[game.moves.length - 1];
+    const oppID = this.getOpponentGameID(user._id.toString(), game.playerIDs);
+    
+    const opponent = await UserModel.findById(oppID);
+
+    if (!opponent) throw new Error("Opponent not found.");
+    
+    let takenPiece : string | undefined;
+    const lastMove = game.moves.at(-1);
+    if (lastMove){
+      if (game.colorToMove === "w" && lastMove.takes.white.length !== whiteTakes.length){
+        takenPiece = whiteTakes.at(-1);
+      }
+
+      if (game.colorToMove === "b" && lastMove.takes.black.length !== blackTakes.length){
+        takenPiece = blackTakes.at(-1);
+      }
+    }
+    
 
     game.moves.push({
       fen,
-      // colorToMove: lastMove ? (lastMove.colorToMove === "w" ? "b" : "w") : "b",
       takes: {
         white: whiteTakes,
         black: blackTakes,
@@ -106,6 +177,15 @@ export class GameResolver {
     game.colorToMove = game.colorToMove === "w" ? "b" : "w";
 
     await game.save();
+    await this.sendMovePlayerEmail({
+      email: opponent.email,
+      opponentName: opponent.firstName,
+      from: this.toAlgebraic(executedMove.from),
+      to: this.toAlgebraic(executedMove.to),
+      piece: executedMove.pieceType,
+      gameID: game._id.toString(),
+      takenPiece
+    })
 
     return new AuthPayload({ id: user._id });
   }
