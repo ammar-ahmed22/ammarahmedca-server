@@ -31,7 +31,9 @@ A high-level overview of the tech stack this website uses:
 ## 🔧 How does it work?
 <p align="center">
     <img width="800"  alt="server architecture for ammarahmed.ca" src="./images/server-diagram.png?raw=true">
-    <em>A high-level diagram of how the server and API is set up.</em>
+</p>
+<p align="center" >
+  <em>A high-level diagram of how the server and API is set up.</em>
 </p>
 
 BING BONG
