@@ -7,7 +7,7 @@
 
 A high-level overview of the tech stack this website uses:
 
-**Front-end**
+[**Front-end**](https://github.com/ammar-ahmed22/ammarahmedca)
 
 - [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/) is used for the functionality of the website.
 - [ChakraUI](https://chakra-ui.com/) is used to create the standardized and aesthetic UI.
@@ -28,23 +28,13 @@ A high-level overview of the tech stack this website uses:
 - [Google Firebase](https://firebase.google.com/) is used for the client-side hosting
 - [Fly.io](https://fly.io/docs/) is used for the server-side hosting.
 
-## 🔧 Notable Features
+## 🔧 How does it work?
+<p align="center">
+    <img width="200"  alt="server architecture for ammarahmed.ca" src="./images/server-diagram.png?raw=true">
+</p>
+Above is a high-level diagram of how the server and API is set up 
 
-### Content Management
-
-Web content such as blog posts, project content, skills etc. are written, edited and persisted in Notion. Automatically updated whenever changed in Notion
-
-### Light/Dark Mode
-
-Switching between light and dark mode. Default is set according to your system settings.
-
-### Continous Deployment
-
-Client-side and server-side deployment is set-up automatically with `production` branch pushes. SMS Notifications are sent to me after deployment finishes using Twilio.
-
-### Skill Charts
-
-Aesthetic radar charts created for skills using [recharts](https://recharts.org/en-US)
+BING BONG
 
 ## 🚧 Roadmap
 
