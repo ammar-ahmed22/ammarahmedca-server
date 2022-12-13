@@ -55,13 +55,13 @@ All the game logic on the front-end is also implemnted by me as a learning exerc
 The back-end architecture for the game uses MongoDB to store user and game data. The GraphQL API is authenticated using json web tokens (JWT). 
 
 ### Technology Choices
-**Node.js (TypeScript)** 
+**Node.js (TypeScript)**<br />
 As I'm quite comfortable with TypeScript, this was the obvious choice for me.
 
-**GraphQL** 
+**GraphQL** <br />
 GraphQL API's are the status quo for modern API's due to their obvious advantages over REST API's. GraphQL API's allow for more fine-tuned requests which saves on data as the user can request exactly which fields they need. It also makes for easier implementation as all requests are made to the same endpoint.
 
-**TypeGraphQL and Typegoose** 
+**TypeGraphQL and Typegoose** <br />
 In order to structure the API and database documents, I implemented two libraries, TypeGraphQL and Typegoose. They work very well together as they operate on the same fundamentals. 
 
 The popular JavaScript framework, mongoose, allows for creating database models that can be used to easily create and access MongoDB documents. They do this by defining classes called "schemas" in which you can define properties and types for documents. The issue is that mongoose does not do a very good job with making typed classes for use with TypeScript. While all MongoDB properties have types, when using with TypeScript types are not known to the compiler. Typegoose allows for defining types both in MongoDB as well as TypeScript. 
