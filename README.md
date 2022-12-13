@@ -111,7 +111,7 @@ type User = {
 
 The current implementation for the chess game implements authentication by requiring an Authorization header to be set to access any authorized queries or mutations. Any authorized mutations which do not send back data, will return a new JWT to be used in subsequent requests. e.g. the login mutation will send back a JWT. 
 
-You can see the API documentation here: 
+You can see the API documentation [here](https://studio.apollographql.com/public/ammarahmedca-api-v2/home?variant=production)  
 
 ## 💬 Feedback
 

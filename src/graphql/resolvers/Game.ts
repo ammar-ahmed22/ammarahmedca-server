@@ -20,7 +20,7 @@ import transporter, { readHTML, insertParams, getParamNames } from "../../utils/
 
 @ArgsType()
 class AddMoveArgs {
-  @Field()
+  @Field({ description: "FEN string for chess game after move is made."})
   public fen: string;
 
   @Field(returns => ExecutedMoveInput)
@@ -29,17 +29,17 @@ class AddMoveArgs {
   @Field({ nullable: true })
   public boardOpts?: BoardOptsInput;
 
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "Array of white pieces taken by black after move is made." })
   public whiteTakes: string[];
 
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "Array of black pieces taken by white after move is made." })
   public blackTakes: string[];
 
-  @Field()
+  @Field({ description: "Game ID for game to add move to." })
   public gameID: string
 }
 
-@ObjectType()
+@ObjectType({ description: "Game ID sent when new game created." })
 class CreateGameResponse{
   @Field()
   gameID: string
@@ -88,7 +88,7 @@ export class GameResolver {
   }
 
   @Authorized()
-  @Mutation(returns => CreateGameResponse)
+  @Mutation(returns => CreateGameResponse, { description: "Creates new game. (Authorized)"})
   async createGame(@Ctx() ctx: Context) {
     const user = await UserModel.findById(ctx.userId);
     const me = await UserModel.findOne({ email: "a353ahme@uwaterloo.ca" });
@@ -117,7 +117,7 @@ export class GameResolver {
   }
 
   @Authorized()
-  @Mutation(returns => AuthPayload)
+  @Mutation(returns => AuthPayload, { description: "Adds move to game. (Authorized)"})
   async addMove(
     @Ctx() ctx: Context,
     @Args() { fen, boardOpts, whiteTakes, blackTakes, executedMove, gameID }: AddMoveArgs
@@ -179,7 +179,7 @@ export class GameResolver {
   }
 
   @Authorized()
-  @Query(returns => Game)
+  @Query(returns => Game, { description: "Gets game. (Authorized)"})
   async game(
     @Ctx() ctx: Context,
     @Arg("gameID") gameID: string
@@ -194,7 +194,7 @@ export class GameResolver {
   }
 
   @Authorized()
-  @Query(returns => [Game])
+  @Query(returns => [Game], { description: "Gets all games for user. (Authorized)"})
   async games (
     @Ctx() ctx: Context,
   ){

@@ -172,7 +172,7 @@ export class BlogResolver {
     }
   }
 
-  @Query((returns) => [Metadata], { description: "gets all metadata" })
+  @Query((returns) => [Metadata], { description: "Gets all metadata" })
   async allMetadata() {
     if (this.blogdbID) {
       const response = await this.notion.databases.query({
