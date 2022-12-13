@@ -48,7 +48,7 @@ export class UserResolver {
     console.log("reset pass email sent to:", email);
   };
 
-  @Mutation((returns) => AuthPayload)
+  @Mutation((returns) => AuthPayload, { description: "Register for ammarahmed.ca"})
   async register(@Arg("data") data: RegisterInput) {
     const existing = await UserModel.findOne({ email: data.email });
 
@@ -65,7 +65,7 @@ export class UserResolver {
   }
 
   @Authorized()
-  @Mutation((returns) => AuthPayload)
+  @Mutation((returns) => AuthPayload, { description: "Create and send a new email confirmation code. (Authorized)"})
   async newEmailCode(@Ctx() ctx: Context) {
     const user = await UserModel.findById(ctx.userId);
 
@@ -78,7 +78,7 @@ export class UserResolver {
   }
 
   @Authorized()
-  @Mutation((returns) => AuthPayload)
+  @Mutation((returns) => AuthPayload, { description: "Verify email with confirmation code. (Authorized)"})
   async confirmEmail(
     @Ctx() ctx: Context,
     @Arg("code", (type) => Int) code: number
@@ -102,7 +102,7 @@ export class UserResolver {
     return new AuthPayload({ id: user._id });
   }
 
-  @Mutation((returns) => AuthPayload)
+  @Mutation((returns) => AuthPayload, { description: "Login to ammarahmed.ca" })
   async login(@Arg("email") email: string, @Arg("password") password: string) {
     const user = await UserModel.findOne({ email }).select("+password");
     const errorMsg = "Invalid credentials. Check email or password.";
@@ -120,7 +120,7 @@ export class UserResolver {
     return new AuthPayload({ id: user._id });
   }
 
-  @Mutation((returns) => String)
+  @Mutation((returns) => String, { description: "Send forgot password email" })
   async forgotPassword(@Arg("email") email: string) {
     const user = await UserModel.findOne({ email });
 
@@ -132,7 +132,7 @@ export class UserResolver {
     return "Reset password email sent to: " + user.email;
   }
 
-  @Mutation((returns) => String)
+  @Mutation((returns) => String, { description: "Reset password with encrypted token."})
   async resetPassword(
     @Arg("newPassword") newPassword: string,
     @Arg("token") token: string
@@ -155,7 +155,7 @@ export class UserResolver {
   }
 
   @Authorized()
-  @Query((returns) => User)
+  @Query((returns) => User, { description: "Gets user. (Authorized)"})
   async user(@Ctx() ctx: Context) {
     const user = await UserModel.findById(ctx.userId);
     if (!user) throw new Error("Not found!");
@@ -163,7 +163,7 @@ export class UserResolver {
   }
 
   @Authorized()
-  @Mutation((returns) => AuthPayload)
+  @Mutation((returns) => AuthPayload, { description: "Updates user fields. (Authorized)"})
   async updateUser(@Ctx() ctx: Context, @Arg("data") data: UpdateInput) {
     const user = await UserModel.findById(ctx.userId);
 
@@ -183,7 +183,7 @@ export class UserResolver {
   }
 
   @Authorized()
-  @Query((returns) => User)
+  @Query((returns) => User, { description: "Gets any user by id. (Authorized)"})
   async getUserByID(@Arg("userId") userId: string) {
     const user = await UserModel.findById(userId);
 

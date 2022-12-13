@@ -18,9 +18,9 @@ const takesValidator = (v: string[]): boolean => {
   return true;
 };
 
-@ObjectType()
+@ObjectType({ description: "Object containing taken pieces."})
 export class Takes {
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "Array of white pieces taken by black."})
   @prop({
     required: true,
     default: [],
@@ -32,7 +32,7 @@ export class Takes {
   })
   public white: Types.Array<String>;
 
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "Array of black pieces taken by white."})
   @prop({
     required: true,
     default: [],
@@ -45,7 +45,7 @@ export class Takes {
   public black: Types.Array<String>;
 }
 
-@ObjectType()
+@ObjectType({ description: "Object containing ID's for white and black chess players."})
 export class Players {
   @Field()
   @prop({ required: true })
@@ -56,26 +56,26 @@ export class Players {
   public black: string;
 }
 
-@ObjectType()
+@ObjectType({ description: "Options for given move in chess game."})
 export class BoardOpts {
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "FEN string section for castling ability" })
   @prop()
   public castling?: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "Squares in which en passant is possible." })
   @prop()
   public enPassant?: string;
 
-  @Field((returns) => Int, { nullable: true })
+  @Field((returns) => Int, { nullable: true, description: "Half move count." })
   @prop()
   public halfMove?: number;
 
-  @Field((returns) => Int, { nullable: true })
+  @Field((returns) => Int, { nullable: true, description: "Full move count." })
   @prop()
   public fullMove?: number;
 }
 
-@InputType()
+@InputType({ description: "Input type for chess game options."})
 export class BoardOptsInput implements BoardOpts {
   @Field({ nullable: true })
   public castling?: string;
@@ -90,41 +90,41 @@ export class BoardOptsInput implements BoardOpts {
   public fullMove?: number;
 }
 
-@ObjectType()
+@ObjectType({ description: "Algebraic notation for chess square."})
 export class Algebraic{
 
-  @Field(returns => Int)
+  @Field(returns => Int, { description: "Rank (row, 1-8) number for chess square."})
   @prop({ required: true })
   public rank: number;
 
-  @Field()
+  @Field({ description: "File (column, A-H) letter for chess square."})
   @prop({ required: true })
   public file: string
 
 }
 
-@ObjectType()
+@ObjectType({ description: "Data for chess move that was played."})
 export class ExecutedMove{
-  @Field(returns => Algebraic)
+  @Field(returns => Algebraic, { description: "Square that piece was moved from."})
   @prop({ required: true, type: Algebraic })
   public from: Algebraic
 
-  @Field(returns => Algebraic)
+  @Field(returns => Algebraic, { description: "Square that piece was moved to."})
   @prop({ required: true, type: Algebraic })
   public to: Algebraic
 
-  @Field()
+  @Field({ description: "Name of the piece that was moved."})
   @prop({ required: true })
   public pieceType: string
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "Was check caused by this move." })
   @prop()
   public causedCheck?: boolean
   
 
 }
 
-@InputType()
+@InputType({ description: "Input type for algebraic notation."})
 export class AlgebraicInput extends Algebraic{
   @Field(returns => Int)
   public rank: number;
@@ -133,7 +133,7 @@ export class AlgebraicInput extends Algebraic{
   public file: string
 }
 
-@InputType()
+@InputType({ description: "Input type for move that was executed."})
 export class ExecutedMoveInput extends ExecutedMove{
   @Field(returns => AlgebraicInput)
   public from: AlgebraicInput
@@ -148,9 +148,9 @@ export class ExecutedMoveInput extends ExecutedMove{
   public causedCheck?: boolean
 }
 
-@ObjectType()
+@ObjectType({ description: "Data for a given move."})
 export class Move {
-  @Field()
+  @Field({ description: "FEN string for board state after the move was made."})
   @prop({
     required: true,
     validate: {
@@ -162,22 +162,22 @@ export class Move {
   })
   public fen: string;
 
-  @Field((returns) => BoardOpts, { nullable: true })
+  @Field((returns) => BoardOpts, { nullable: true, description: "Board options for after the move was made."})
   @prop({ type: BoardOpts, default: {} })
   public boardOpts?: BoardOpts;
 
-  @Field((returns) => Takes)
+  @Field((returns) => Takes, { description: "White and black taken pieces after move was made."})
   @prop({ required: true, default: { white: [], black: [] }, type: Takes })
   public takes: Takes;
 
-  @Field(returns => ExecutedMove)
+  @Field(returns => ExecutedMove, { description: "Data for the move that was executed."})
   @prop({ type: ExecutedMove })
   public executedMove: ExecutedMove
 
   
 }
 
-@ObjectType()
+@ObjectType({ description: "Data for the game."})
 @modelOptions({
   schemaOptions: {
     timestamps: true,
@@ -191,22 +191,22 @@ export class Game {
   @Field({ description: "Date game was created at." })
   readonly createdAt: Date;
 
-  @Field((returns) => [Move])
+  @Field((returns) => [Move], { description: "Array of moves for the game."})
   @prop({ required: true, default: [], type: Move })
   public moves: Types.Array<Move>;
 
-  @Field((returns) => Players)
+  @Field((returns) => Players, { description: "MongoDB id's for the users playing the game."})
   @prop({ type: Players, required: true })
   public playerIDs: Players;
 
-  @Field(returns => Move, { nullable: true })
+  @Field(returns => Move, { nullable: true, description: "The latest move." })
   public lastMove?: Move
 
-  @Field()
+  @Field({ description: "Color to move after the latest move."})
   @prop({ required: true })
   public colorToMove: string;
 
-  @Field()
+  @Field({ description: "Status of the game (active, complete)"})
   @prop({ required: true, default: "active"})
   public status: string
 }

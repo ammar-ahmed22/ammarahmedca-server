@@ -20,7 +20,7 @@ import transporter, { readHTML, insertParams, getParamNames } from "../../utils/
 
 @ArgsType()
 class AddMoveArgs {
-  @Field()
+  @Field({ description: "FEN string for chess game after move is made."})
   public fen: string;
 
   @Field(returns => ExecutedMoveInput)
@@ -29,17 +29,17 @@ class AddMoveArgs {
   @Field({ nullable: true })
   public boardOpts?: BoardOptsInput;
 
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "Array of white pieces taken by black after move is made." })
   public whiteTakes: string[];
 
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "Array of black pieces taken by white after move is made." })
   public blackTakes: string[];
 
-  @Field()
+  @Field({ description: "Game ID for game to add move to." })
   public gameID: string
 }
 
-@ObjectType()
+@ObjectType({ description: "Game ID sent when new game created." })
 class CreateGameResponse{
   @Field()
   gameID: string
@@ -47,7 +47,7 @@ class CreateGameResponse{
 
 type SendMovePlayerEmailOpts = {
   email: string,
-  opponentName: string,
+  firstName: string,
   piece: string,
   from: string,
   to: string,
@@ -59,11 +59,11 @@ type SendMovePlayerEmailOpts = {
 export class GameResolver {
   constructor(private mailer = transporter){}
 
-  private sendMovePlayerEmail = async ({ email, opponentName, from, to, piece, gameID, takenPiece} : SendMovePlayerEmailOpts) => {
+  private sendMovePlayerEmail = async ({ email, firstName, from, to, piece, gameID, takenPiece} : SendMovePlayerEmailOpts) => {
     const html = readHTML("../emails/move-played.html");
     // params: opponent, piece, to, takeDescription, linkToGame, from
     const params : Record<string, any> = {
-      opponent: opponentName,
+      user: firstName,
       piece,
       from,
       to,
@@ -71,11 +71,11 @@ export class GameResolver {
       takeDescription: takenPiece ? ` and took your ${takenPiece}` : "",
     }
     const updated = insertParams(html, params);
-    console.log(getParamNames(html));
+
     this.mailer.sendMail({
       from: "Ammar Ahmed <ammar@ammarahmed.ca>",
       to: email,
-      subject: `${opponentName} Played Their Move!`,
+      subject: `${firstName} Played Their Move!`,
       text: "Plain text is not supported yet :(",
       html: updated,
     })
@@ -87,23 +87,8 @@ export class GameResolver {
     return `${a.file}${a.rank}`
   }
 
-  @Query(returns => String)
-  async testMovePlayerEmail(){
-    await this.sendMovePlayerEmail({
-      email: "ammar.ahmed2203@gmail.com",
-      opponentName: "Yoski",
-      piece: "queen",
-      from: "e4",
-      to: "e5",
-      gameID: "ajsdfgjsgjsjdfg",
-      takenPiece: "knight"
-    });
-
-    return "success"
-  }
-
   @Authorized()
-  @Mutation(returns => CreateGameResponse)
+  @Mutation(returns => CreateGameResponse, { description: "Creates new game. (Authorized)"})
   async createGame(@Ctx() ctx: Context) {
     const user = await UserModel.findById(ctx.userId);
     const me = await UserModel.findOne({ email: "a353ahme@uwaterloo.ca" });
@@ -132,7 +117,7 @@ export class GameResolver {
   }
 
   @Authorized()
-  @Mutation(returns => AuthPayload)
+  @Mutation(returns => AuthPayload, { description: "Adds move to game. (Authorized)"})
   async addMove(
     @Ctx() ctx: Context,
     @Args() { fen, boardOpts, whiteTakes, blackTakes, executedMove, gameID }: AddMoveArgs
@@ -152,16 +137,16 @@ export class GameResolver {
     const opponent = await UserModel.findById(oppID);
 
     if (!opponent) throw new Error("Opponent not found.");
-    
+
     let takenPiece : string | undefined;
     const lastMove = game.moves.at(-1);
     if (lastMove){
-      if (game.colorToMove === "w" && lastMove.takes.white.length !== whiteTakes.length){
-        takenPiece = whiteTakes.at(-1);
+      if (game.colorToMove === "w" && lastMove.takes.black.length !== blackTakes.length){
+        takenPiece = blackTakes.at(-1);
       }
 
-      if (game.colorToMove === "b" && lastMove.takes.black.length !== blackTakes.length){
-        takenPiece = blackTakes.at(-1);
+      if (game.colorToMove === "b" && lastMove.takes.white.length !== whiteTakes.length){
+        takenPiece = whiteTakes.at(-1);
       }
     }
     
@@ -177,21 +162,24 @@ export class GameResolver {
     game.colorToMove = game.colorToMove === "w" ? "b" : "w";
 
     await game.save();
-    await this.sendMovePlayerEmail({
+
+    const emailParams : SendMovePlayerEmailOpts = {
       email: opponent.email,
-      opponentName: opponent.firstName,
+      firstName: user.firstName,
       from: this.toAlgebraic(executedMove.from),
       to: this.toAlgebraic(executedMove.to),
       piece: executedMove.pieceType,
       gameID: game._id.toString(),
       takenPiece
-    })
+    }
+    
+    await this.sendMovePlayerEmail(emailParams);
 
     return new AuthPayload({ id: user._id });
   }
 
   @Authorized()
-  @Query(returns => Game)
+  @Query(returns => Game, { description: "Gets game. (Authorized)"})
   async game(
     @Ctx() ctx: Context,
     @Arg("gameID") gameID: string
@@ -206,7 +194,7 @@ export class GameResolver {
   }
 
   @Authorized()
-  @Query(returns => [Game])
+  @Query(returns => [Game], { description: "Gets all games for user. (Authorized)"})
   async games (
     @Ctx() ctx: Context,
   ){

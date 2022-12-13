@@ -46,7 +46,7 @@ export class User {
   @Field({ description: "Date user was created at." })
   readonly createdAt: Date;
 
-  @Field()
+  @Field({ description: "Email address for user."})
   @prop({ required: true, unique: true, validate: /\S+@\S+\.\S+/ })
   public email: string;
 
@@ -58,35 +58,35 @@ export class User {
   })
   public password: string;
 
-  @Field()
+  @Field({ description: "User's first name."})
   @prop({ required: true })
   public firstName: string;
 
-  @Field()
+  @Field({ description: "User's last name."})
   @prop({ required: true })
   public lastName: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "User's middle name." })
   @prop()
   public middleName?: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "Company the user works for." })
   @prop()
   public company?: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "Position the user is in at company." })
   @prop()
   public position?: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "Where the user found the website." })
   @prop()
   public foundBy?: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, description: "String representation of profile image." })
   @prop()
   public profilePic?: string;
 
-  @Field((returns) => Record)
+  @Field((returns) => Record, { description: "Games record for user.s"})
   @prop({ required: true, type: Record, default: { wins: 0, losses: 0 } })
   public record: Record;
 
@@ -94,7 +94,7 @@ export class User {
   // @prop()
   // public currentGameID?: string;
 
-  @Field((returns) => [String])
+  @Field((returns) => [String], { description: "ID's for games user has played or is playing."})
   @prop({ required: true, default: [], type: String })
   public gameIDs: Types.Array<String>;
 
@@ -104,7 +104,7 @@ export class User {
   @prop({ required: false })
   public emailConfirmationCodeExpire?: Date;
 
-  @Field()
+  @Field({ description: "Whether or not the user's email has been confirmed."})
   @prop({ required: true, default: false })
   public emailConfirmed: boolean;
 

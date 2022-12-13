@@ -10,9 +10,9 @@ const createJWT = (payload: string | object | Buffer): string => {
   });
 };
 
-@ObjectType()
+@ObjectType({ description: "Authorized mutations response."})
 export class AuthPayload {
-  @Field()
+  @Field({ description: "JWT (json web token)"})
   public token: string;
 
   constructor(payload: string | object | Buffer) {
