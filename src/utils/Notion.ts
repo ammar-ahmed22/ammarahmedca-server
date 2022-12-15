@@ -2,6 +2,7 @@ import { isFullBlock } from "@notionhq/client";
 import {
   BlockObjectResponse,
   PartialBlockObjectResponse,
+  RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
 import { isContentArray } from "../types/typeGuards";
 
@@ -69,6 +70,20 @@ export const mergeListItems = (content: IContent[]): IContent[] => {
   return merged;
 };
 
+const mapRichText = (richText : RichTextItemResponse[], language?: string) : IText[] => {
+  return richText.map( text => {
+    return {
+      plainText: text.plain_text,
+      href: text.href ?? undefined,
+      annotations: {
+        ...text.annotations,
+        color: text.annotations.color as string,
+        language
+      }
+    }
+  })
+}
+
 export const readBlockContent = (
   blocks: (PartialBlockObjectResponse | BlockObjectResponse)[]
 ): IContent[] | undefined => {
@@ -105,93 +120,37 @@ export const readBlockContent = (
         case "heading_1":
           return {
             type: type as string,
-            content: block.heading_1.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  color: text.annotations.color as string,
-                },
-              };
-            }),
+            content: mapRichText(block.heading_1.rich_text),
           };
         case "heading_2":
           return {
             type: type as string,
-            content: block.heading_2.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  color: text.annotations.color as string,
-                },
-              };
-            }),
+            content: mapRichText(block.heading_2.rich_text),
           };
         case "heading_3":
           return {
             type: type as string,
-            content: block.heading_3.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  color: text.annotations.color as string,
-                },
-              };
-            }),
+            content: mapRichText(block.heading_3.rich_text),
           };
         case "paragraph":
           return {
             type: type as string,
-            content: block.paragraph.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  color: text.annotations.color as string,
-                },
-              };
-            }),
+            content: mapRichText(block.paragraph.rich_text),
           };
         case "code":
           return {
             type: type as string,
-            content: block.code.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  language: block.code.language,
-                },
-              };
-            }),
+            content: mapRichText(block.code.rich_text, block.code.language),
           };
         case "bulleted_list_item":
           return {
             type: type as string,
-            content: block.bulleted_list_item.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  color: text.annotations.color as string,
-                },
-              };
-            }),
+            content: mapRichText(block.bulleted_list_item.rich_text),
           };
         case "numbered_list_item":
           return {
             type: type as string,
-            content: block.numbered_list_item.rich_text.map((text) => {
-              return {
-                plainText: text.plain_text,
-                annotations: {
-                  ...text.annotations,
-                  color: text.annotations.color as string,
-                },
-              };
-            }),
+            content: mapRichText(block.numbered_list_item.rich_text),
           };
         default:
           return undefined;
