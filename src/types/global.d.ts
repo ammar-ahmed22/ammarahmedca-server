@@ -13,6 +13,7 @@ declare global {
 
   interface IText {
     plainText: string;
+    href?: string;
     annotations: Annotations;
   }
 

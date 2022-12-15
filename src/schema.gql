@@ -115,6 +115,9 @@ type Text {
   """Text content for rich text."""
   plainText: String!
 
+  """HREF for link text."""
+  href: String
+
   """Rich text annotations."""
   annotations: Annotations!
 }
