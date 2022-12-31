@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: "[FEATURE]: Title"
-labels: enhancement
+name: 'Feature request: Chess'
+about: Suggest an idea for the chess game
+title: "[✨\U0001F3C1 FEATURE]: Title"
+labels: chess, enhancement
 assignees: ammar-ahmed22
 
 ---

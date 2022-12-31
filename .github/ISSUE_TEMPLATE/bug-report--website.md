@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: "[BUG]: Title"
-labels: bug
+name: 'Bug report: Website'
+about: Report a bug for the website
+title: "[\U0001F41B\U0001F310 BUG]: Title"
+labels: bug, website
 assignees: ammar-ahmed22
 
 ---
