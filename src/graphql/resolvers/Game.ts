@@ -14,9 +14,10 @@ import {
   ObjectType,
 } from "type-graphql";
 import { AuthPayload } from "../../utils/auth";
-import GameModel, { BoardOptsInput, Game, ExecutedMoveInput } from "../../models/Game";
+import GameModel, { BoardOptsInput, Game, ExecutedMoveInput, Move, HalfMove, Takes } from "../../models/Game";
 import UserModel from "../../models/User";
 import transporter, { readHTML, insertParams, getParamNames } from "../../utils/mail";
+import { Types } from "mongoose";
 
 @ArgsType()
 class AddMoveArgs {
@@ -87,6 +88,18 @@ export class GameResolver {
     return `${a.file}${a.rank}`
   }
 
+  private getLastHalfMove = (moves: Move[]) : HalfMove | undefined => {
+    const lastMove = moves.at(-1);
+    if (lastMove){
+      if (lastMove.black){
+        return lastMove.black;
+      }
+
+      return lastMove.white
+    }
+    return undefined
+  }
+
   @Authorized()
   @Mutation(returns => CreateGameResponse, { description: "Creates new game. (Authorized)"})
   async createGame(@Ctx() ctx: Context) {
@@ -139,26 +152,44 @@ export class GameResolver {
     if (!opponent) throw new Error("Opponent not found.");
 
     let takenPiece : string | undefined;
-    const lastMove = game.moves.at(-1);
-    if (lastMove){
-      if (game.colorToMove === "w" && lastMove.takes.black.length !== blackTakes.length){
+    const lastHalfMove = this.getLastHalfMove(game.moves);
+    if (lastHalfMove){
+      if (game.colorToMove === "w" && lastHalfMove.takes.black.length !== blackTakes.length){
         takenPiece = blackTakes.at(-1);
       }
 
-      if (game.colorToMove === "b" && lastMove.takes.white.length !== whiteTakes.length){
+      if (game.colorToMove === "b" && lastHalfMove.takes.white.length !== whiteTakes.length){
         takenPiece = whiteTakes.at(-1);
       }
     }
     
+    const lastMove = game.moves.at(-1);
+    
+    if (lastMove && !lastMove.black){
+      game.moves[game.moves.length - 1].black = {
+        fen,
+        takes: {
+          // @ts-ignore
+          white: whiteTakes,
+          // @ts-ignore
+          black: blackTakes
+        },
+        executedMove
+      }
+    }
 
-    game.moves.push({
-      fen,
-      takes: {
-        white: whiteTakes,
-        black: blackTakes,
-      },
-      executedMove
-    });
+    if (!lastMove || !!lastMove.black){
+      game.moves.push({
+        white: {
+          fen,
+          takes: {
+            white: whiteTakes,
+            black: blackTakes,
+          },
+          executedMove
+        }
+      });
+    }
     game.colorToMove = game.colorToMove === "w" ? "b" : "w";
 
     await game.save();
@@ -214,7 +245,7 @@ export class GameResolver {
   }
 
   @FieldResolver(of => Game)
-  lastMove(@Root() game: Game){
-    return game.moves[game.moves.length - 1];
+  lastHalfMove(@Root() game: Game){
+    return this.getLastHalfMove(game.moves)
   }
 }
