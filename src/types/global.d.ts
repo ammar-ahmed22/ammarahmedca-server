@@ -1,3 +1,4 @@
+import { AnyKeys, AnyObject } from "mongoose";
 export {};
 
 declare global {
@@ -77,4 +78,7 @@ declare global {
     type: string;
     value: number;
   }
+
+  // MONGOOSE
+  type BaseDoc<T> = AnyKeys<T> & AnyObject
 }

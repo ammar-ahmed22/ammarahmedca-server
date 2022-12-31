@@ -148,8 +148,8 @@ export class ExecutedMoveInput extends ExecutedMove{
   public causedCheck?: boolean
 }
 
-@ObjectType({ description: "Data for a given move."})
-export class Move {
+@ObjectType({ description: "Data for a given half move." })
+export class HalfMove{
   @Field({ description: "FEN string for board state after the move was made."})
   @prop({
     required: true,
@@ -173,7 +173,17 @@ export class Move {
   @Field(returns => ExecutedMove, { description: "Data for the move that was executed."})
   @prop({ type: ExecutedMove })
   public executedMove: ExecutedMove
+}
 
+@ObjectType({ description: "Data for a given move."})
+export class Move {
+  @Field({ description: "White player's half move"})
+  @prop({ required: true })
+  public white: HalfMove
+
+  @Field({ description: "Black player's half move", nullable: true })
+  @prop({ required: false })
+  public black?: HalfMove
   
 }
 
@@ -199,8 +209,8 @@ export class Game {
   @prop({ type: Players, required: true })
   public playerIDs: Players;
 
-  @Field(returns => Move, { nullable: true, description: "The latest move." })
-  public lastMove?: Move
+  @Field(returns => HalfMove, { nullable: true, description: "The latest half move." })
+  public lastHalfMove?: HalfMove
 
   @Field({ description: "Color to move after the latest move."})
   @prop({ required: true })

@@ -266,8 +266,8 @@ type Game {
   """MongoDB id's for the users playing the game."""
   playerIDs: Players!
 
-  """The latest move."""
-  lastMove: Move
+  """The latest half move."""
+  lastHalfMove: HalfMove
 
   """Color to move after the latest move."""
   colorToMove: String!
@@ -278,6 +278,15 @@ type Game {
 
 """Data for a given move."""
 type Move {
+  """White player's half move"""
+  white: HalfMove!
+
+  """Black player's half move"""
+  black: HalfMove
+}
+
+"""Data for a given half move."""
+type HalfMove {
   """FEN string for board state after the move was made."""
   fen: String!
 
