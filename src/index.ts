@@ -53,6 +53,19 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
           })
         : ApolloServerPluginLandingPageLocalDefault(),
     ],
+    formatError: (formattedError, error) => {
+      if (formattedError.message === "Access denied! You need to be authorized to perform this action!"){
+        const extensions = formattedError.extensions;
+        return {
+          ...formattedError,
+          extensions: {
+            ...extensions,
+            code: "UNAUTHENTICATED"
+          }
+        }
+      }
+      return formattedError;
+    }
   });
 
   if (process.env.NODE_ENV !== "production"){
