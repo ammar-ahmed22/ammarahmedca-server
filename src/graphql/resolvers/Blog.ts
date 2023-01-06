@@ -106,6 +106,7 @@ export class BlogResolver {
       timeline: readProperty(page.properties.Timeline) as string,
       type: readProperty(page.properties.Type) as string[],
       frameworks: readProperty(page.properties.Frameworks) as string[],
+      languages: readProperty(page.properties.Languages) as string[],
       github: readProperty(page.properties.GitHub) as string,
       external: readProperty(page.properties.External) as string,
       description: readProperty(page.properties.Description) as string,
