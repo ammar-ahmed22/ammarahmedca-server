@@ -12,11 +12,11 @@ import crypto from "crypto";
 
 @ObjectType()
 export class Record {
-  @Field((returns) => Int)
+  @Field(returns => Int)
   @prop({ required: true, default: 0 })
   public wins: number;
 
-  @Field((returns) => Int)
+  @Field(returns => Int)
   @prop({ required: true, default: 0 })
   public losses: number;
 }
@@ -40,13 +40,13 @@ export class Record {
   return next();
 })
 export class User {
-  @Field((returns) => ID, { description: "MongoDB id for user." })
+  @Field(returns => ID, { description: "MongoDB id for user." })
   readonly _id: Schema.Types.ObjectId;
 
   @Field({ description: "Date user was created at." })
   readonly createdAt: Date;
 
-  @Field({ description: "Email address for user."})
+  @Field({ description: "Email address for user." })
   @prop({ required: true, unique: true, validate: /\S+@\S+\.\S+/ })
   public email: string;
 
@@ -58,11 +58,11 @@ export class User {
   })
   public password: string;
 
-  @Field({ description: "User's first name."})
+  @Field({ description: "User's first name." })
   @prop({ required: true })
   public firstName: string;
 
-  @Field({ description: "User's last name."})
+  @Field({ description: "User's last name." })
   @prop({ required: true })
   public lastName: string;
 
@@ -82,11 +82,14 @@ export class User {
   @prop()
   public foundBy?: string;
 
-  @Field({ nullable: true, description: "String representation of profile image." })
+  @Field({
+    nullable: true,
+    description: "String representation of profile image.",
+  })
   @prop()
   public profilePic?: string;
 
-  @Field((returns) => Record, { description: "Games record for user.s"})
+  @Field(returns => Record, { description: "Games record for user.s" })
   @prop({ required: true, type: Record, default: { wins: 0, losses: 0 } })
   public record: Record;
 
@@ -94,7 +97,9 @@ export class User {
   // @prop()
   // public currentGameID?: string;
 
-  @Field((returns) => [String], { description: "ID's for games user has played or is playing."})
+  @Field(returns => [String], {
+    description: "ID's for games user has played or is playing.",
+  })
   @prop({ required: true, default: [], type: String })
   public gameIDs: Types.Array<String>;
 
@@ -104,7 +109,7 @@ export class User {
   @prop({ required: false })
   public emailConfirmationCodeExpire?: Date;
 
-  @Field({ description: "Whether or not the user's email has been confirmed."})
+  @Field({ description: "Whether or not the user's email has been confirmed." })
   @prop({ required: true, default: false })
   public emailConfirmed: boolean;
 

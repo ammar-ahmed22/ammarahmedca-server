@@ -45,7 +45,7 @@ export class BlogResolver {
           if (isText(text)) {
             const words = text.plainText
               .split(" ")
-              .filter((word) => word !== "" && word !== ".");
+              .filter(word => word !== "" && word !== ".");
             wordCount += words.length;
           }
         }
@@ -62,7 +62,7 @@ export class BlogResolver {
   ): Promise<IMetadata> => {
     const isBlog = readProperty(page.properties.isBlog) as boolean;
 
-    let readTime = undefined;
+    let readTime: number | undefined = undefined;
     let pathname = readProperty(page.properties.Pathname);
     let published = createDate(readProperty(page.properties.Published).start);
 
@@ -119,7 +119,7 @@ export class BlogResolver {
     };
   };
 
-  @Query((returns) => Metadata, {
+  @Query(returns => Metadata, {
     description: "Gets metadata by id or pathname",
   })
   async metadata(
@@ -135,7 +135,7 @@ export class BlogResolver {
           },
         });
 
-        const pages = response.results.filter((page) => page.id === id);
+        const pages = response.results.filter(page => page.id === id);
         console.log({ pages });
         if (pages.length <= 0) throw new GraphQLError("No results with id.");
 
@@ -173,7 +173,7 @@ export class BlogResolver {
     }
   }
 
-  @Query((returns) => [Metadata], { description: "Gets all metadata" })
+  @Query(returns => [Metadata], { description: "Gets all metadata" })
   async allMetadata() {
     if (this.blogdbID) {
       const response = await this.notion.databases.query({
@@ -184,7 +184,7 @@ export class BlogResolver {
       });
 
       const result = await Promise.all(
-        response.results.map(async (result) => {
+        response.results.map(async result => {
           if (isFullPage(result)) {
             const metadata = await this.createMetadata(result);
             return metadata;
@@ -197,7 +197,7 @@ export class BlogResolver {
     throw new GraphQLError("error connecting to database.");
   }
 
-  @Query((returns) => [Metadata], { description: "Gets blog post metadata" })
+  @Query(returns => [Metadata], { description: "Gets blog post metadata" })
   async blogMetadata(
     @Arg("publishedOnly", { nullable: true }) publishedOnly: boolean = false
   ) {
@@ -236,7 +236,7 @@ export class BlogResolver {
       });
 
       const result = await Promise.all(
-        response.results.map(async (result) => {
+        response.results.map(async result => {
           if (isFullPage(result)) {
             const metadata = await this.createMetadata(result);
 
@@ -250,7 +250,7 @@ export class BlogResolver {
     throw new GraphQLError("error connecting to database.");
   }
 
-  @Query((returns) => [Metadata], { description: "Gets project post metadata" })
+  @Query(returns => [Metadata], { description: "Gets project post metadata" })
   async projectMetadata() {
     if (this.blogdbID) {
       const response = await this.notion.databases.query({
@@ -266,15 +266,15 @@ export class BlogResolver {
             {
               property: "Publish",
               checkbox: {
-                equals: true
-              }
-            }
+                equals: true,
+              },
+            },
           ],
         },
       });
 
       const result = await Promise.all(
-        response.results.map(async (result) => {
+        response.results.map(async result => {
           if (isFullPage(result)) {
             const metadata = await this.createMetadata(result);
             return metadata;
@@ -288,7 +288,7 @@ export class BlogResolver {
     throw new GraphQLError("error connecting to database.");
   }
 
-  @Query((returns) => [Content], {
+  @Query(returns => [Content], {
     description: "Gets content for blog by pathname.",
   })
   async content(@Arg("pathname") pathname: string) {
@@ -333,7 +333,7 @@ export class BlogResolver {
     throw new GraphQLError("error connecting to database.");
   }
 
-  @Query((returns) => FilterOpts)
+  @Query(returns => FilterOpts)
   async filterOpts() {
     if (this.blogdbID) {
       const response = await this.notion.databases.retrieve({
@@ -350,25 +350,25 @@ export class BlogResolver {
       if (response.properties.Frameworks.type === "multi_select") {
         res.frameworks =
           response.properties.Frameworks.multi_select.options.map(
-            (option) => option.name
+            option => option.name
           );
       }
 
       if (response.properties.Type.type === "multi_select") {
         res.type = response.properties.Type.multi_select.options.map(
-          (option) => option.name
+          option => option.name
         );
       }
 
       if (response.properties.Languages.type === "multi_select") {
         res.languages = response.properties.Languages.multi_select.options.map(
-          (option) => option.name
+          option => option.name
         );
       }
 
       if (response.properties.Category.type === "select") {
         res.languages = response.properties.Category.select.options.map(
-          (option) => option.name
+          option => option.name
         );
       }
 

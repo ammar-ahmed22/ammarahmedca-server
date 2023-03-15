@@ -21,6 +21,7 @@ import { buildSchema } from "type-graphql";
 import { printSchema } from "graphql";
 
 import { BlogResolver } from "./graphql/resolvers/Blog";
+import { BlogResolverV2 } from "./graphql/resolvers/Blogv2";
 import { WebsiteResolver } from "./graphql/resolvers/Website";
 import { UserResolver } from "./graphql/resolvers/User";
 import { GameResolver } from "./graphql/resolvers/Game";
@@ -31,13 +32,19 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 
 (async () => {
   const schema = await buildSchema({
-    resolvers: [BlogResolver, WebsiteResolver, UserResolver, GameResolver],
+    resolvers: [
+      // BlogResolver,
+      WebsiteResolver,
+      UserResolver,
+      GameResolver,
+      BlogResolverV2,
+    ],
     dateScalarMode: "timestamp",
     authChecker,
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       sortedSchema: false,
-    }
+    },
   });
 
   const app = express();
@@ -54,21 +61,24 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
         : ApolloServerPluginLandingPageLocalDefault(),
     ],
     formatError: (formattedError, error) => {
-      if (formattedError.message === "Access denied! You need to be authorized to perform this action!"){
+      if (
+        formattedError.message ===
+        "Access denied! You need to be authorized to perform this action!"
+      ) {
         const extensions = formattedError.extensions;
         return {
           ...formattedError,
           extensions: {
             ...extensions,
-            code: "UNAUTHENTICATED"
-          }
-        }
+            code: "UNAUTHENTICATED",
+          },
+        };
       }
       return formattedError;
-    }
+    },
   });
 
-  if (process.env.NODE_ENV !== "production"){
+  if (process.env.NODE_ENV !== "production") {
     if (process.env.MONGO_URI) await connect(process.env.MONGO_URI);
     // Creating my own user and a test user
     const exists = await UserModel.findOne({ email: "a353ahme@uwaterloo.ca" });

@@ -80,5 +80,5 @@ declare global {
   }
 
   // MONGOOSE
-  type BaseDoc<T> = AnyKeys<T> & AnyObject
+  type BaseDoc<T> = AnyKeys<T> & AnyObject;
 }

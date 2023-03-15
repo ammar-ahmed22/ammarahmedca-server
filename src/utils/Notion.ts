@@ -32,7 +32,7 @@ export const readProperty = (property: Record<string, any>) => {
 };
 
 export const createDate = (yyyy_mm_dd: string) => {
-  const [year, month, day] = yyyy_mm_dd.split("-").map((str) => parseInt(str));
+  const [year, month, day] = yyyy_mm_dd.split("-").map(str => parseInt(str));
   return new Date(year, month - 1, day, 0, 0, 0);
 };
 
@@ -70,25 +70,28 @@ export const mergeListItems = (content: IContent[]): IContent[] => {
   return merged;
 };
 
-const mapRichText = (richText : RichTextItemResponse[], language?: string) : IText[] => {
-  return richText.map( text => {
+const mapRichText = (
+  richText: RichTextItemResponse[],
+  language?: string
+): IText[] => {
+  return richText.map(text => {
     return {
       plainText: text.plain_text,
       href: text.href ?? undefined,
       annotations: {
         ...text.annotations,
         color: text.annotations.color as string,
-        language
-      }
-    }
-  })
-}
+        language,
+      },
+    };
+  });
+};
 
 export const readBlockContent = (
   blocks: (PartialBlockObjectResponse | BlockObjectResponse)[]
 ): IContent[] | undefined => {
   const result = blocks
-    .map((block) => {
+    .map(block => {
       if (!isFullBlock(block)) {
         return undefined;
       }
@@ -156,7 +159,7 @@ export const readBlockContent = (
           return undefined;
       }
     })
-    .filter((block) => {
+    .filter(block => {
       if (!block) {
         return false;
       } else if (block.content.length === 0) {

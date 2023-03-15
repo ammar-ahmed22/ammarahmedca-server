@@ -4,21 +4,10 @@
 # -----------------------------------------------
 
 type Query {
-  """Gets metadata by id or pathname"""
-  metadata(pathname: String, id: String): Metadata!
-
-  """Gets all metadata"""
-  allMetadata: [Metadata!]!
-
-  """Gets blog post metadata"""
-  blogMetadata(publishedOnly: Boolean): [Metadata!]!
-
-  """Gets project post metadata"""
-  projectMetadata: [Metadata!]!
-
-  """Gets content for blog by pathname."""
-  content(pathname: String!): [Content!]!
-  filterOpts: FilterOpts!
+  v2blogMetadata(tags: [String!], category: String, onlyPublished: Boolean): [PostMetadata!]!
+  postBySlug(slug: String!): Post!
+  blogCategories: [String!]!
+  blogTags: [String!]!
 
   """Gets all experiences."""
   experiences: [Experience!]!
@@ -28,6 +17,7 @@ type Query {
 
   """Gets all types for skills."""
   skillTypes: [String!]!
+  projectMetadata(type: [String!], frameworks: [String!], languages: [String!], onlyPublished: Boolean): [ProjectMetadata!]!
 
   """Gets user. (Authorized)"""
   user: User!
@@ -42,76 +32,18 @@ type Query {
   games: [Game!]!
 }
 
-"""Metadata model for blog and project posts"""
-type Metadata {
-  """ID of the page in Notion."""
+type PostMetadata {
   id: String!
-
-  """Timestamp when page was last edited."""
-  lastEdited: Timestamp!
-
-  """Name of the page entry."""
   name: String!
-
-  """Pathname for blog posts."""
-  pathname: String
-
-  """Month year string for project posts."""
-  timeline: String
-
-  """List of types for project or blog post."""
-  type: [String!]
-
-  """Programming languages used for project or blog post."""
-  languages: [String!]
-
-  """Frameworks used for project or blog post."""
-  frameworks: [String!]
-
-  """GitHub link for project or blog post."""
-  github: String
-
-  """External link for project or blog post."""
-  external: String
-
-  """Description for project or blog post."""
-  description: String
-
-  """Published date for project or blog post."""
-  published: Timestamp
-
-  """Boolean for blog post."""
-  isBlog: Boolean
-
-  """Boolean for project post."""
-  isProject: Boolean
-
-  """Read time in minutes for blog post."""
-  readTime: Int
-
-  """Category for blog post."""
-  category: String
-
-  """Boolean to show blog post."""
-  isPublished: Boolean
+  description: [RichText!]!
+  category: String!
+  tags: [String!]!
+  date: Timestamp!
+  slug: String!
+  image: String
 }
 
-"""
-The javascript `Date` as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
-"""
-scalar Timestamp
-
-"""Content block for blog."""
-type Content {
-  type: String!
-  content: [TextOrImage!]!
-}
-
-"""Text or Image union type for content blocks."""
-union TextOrImage = Text | Image
-
-"""Object containing text properties."""
-type Text {
+type RichText {
   """Text content for rich text."""
   plainText: String!
 
@@ -146,21 +78,46 @@ type Annotations {
   language: String
 }
 
+"""
+The javascript `Date` as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
+"""
+scalar Timestamp
+
+type Post {
+  metadata: PostMetadata!
+  content: [Block!]!
+}
+
+"""Block content for posts"""
+type Block {
+  type: String!
+  content: [BlockContent!]!
+}
+
+"""Union type for block content"""
+union BlockContent = Image | List | RichText | Equation
+
 """Object containing image properties."""
 type Image {
   """Image url."""
   url: String!
 
   """Image caption."""
-  caption: String!
+  caption: [RichText!]!
 }
 
-"""Metadata filter options."""
-type FilterOpts {
-  frameworks: [String!]!
-  type: [String!]!
-  languages: [String!]!
-  category: [String!]!
+type List {
+  children: [ListItem!]!
+}
+
+"""List item with unlimited depth of children"""
+type ListItem {
+  content: [RichText!]!
+  children: [ListItem!]
+}
+
+type Equation {
+  expression: String!
 }
 
 """Experience information."""
@@ -172,7 +129,7 @@ type Experience {
   role: String!
 
   """Description of experience."""
-  description: [Text!]!
+  description: [RichText!]!
 
   """Type/Field of experience."""
   type: String!
@@ -203,6 +160,19 @@ type Skill {
 
   """Competency in skill out of 100."""
   value: Int!
+}
+
+"""Metadata for project posts"""
+type ProjectMetadata {
+  id: String!
+  name: String!
+  description: [RichText!]!
+  languages: [String!]!
+  frameworks: [String!]!
+  type: [String!]!
+  dateRange: Timeframe!
+  external: String
+  github: String
 }
 
 """User for chess games"""
