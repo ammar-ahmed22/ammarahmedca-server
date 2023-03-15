@@ -10,7 +10,7 @@ import {
   BlockType,
   IPost,
   IPostMetadata,
-  IEquation
+  IEquation,
 } from "@ammarahmedca/types";
 
 @ObjectType({ description: "Metadata model for blog and project posts" })
@@ -189,7 +189,7 @@ export const BlockContent = createUnionType({
   description: "Union type for block content",
   types: () => [Image, List, RichText, Equation] as const,
   resolveType: value => {
-    if ("expression" in value){
+    if ("expression" in value) {
       return Equation;
     }
 

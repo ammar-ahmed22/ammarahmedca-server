@@ -76,8 +76,8 @@ export const extractPropertyValue = (
     return property.select?.name;
   }
 
-  if (property.type === "url"){
-    return property.url ?? undefined
+  if (property.type === "url") {
+    return property.url ?? undefined;
   }
 };
 
@@ -136,7 +136,8 @@ export const getAllListChildren = async (
  */
 export const mergeListItems = (unmerged: IUnmergedBlock[]): IBlock[] => {
   const merged: IBlock[] = [];
-  const isListItem = (b: IUnmergedBlock) => b !== undefined && b.type.includes("list_item");
+  const isListItem = (b: IUnmergedBlock) =>
+    b !== undefined && b.type.includes("list_item");
   let l = 0;
   let r = 1;
   let list: IList | undefined;
@@ -162,7 +163,7 @@ export const mergeListItems = (unmerged: IUnmergedBlock[]): IBlock[] => {
 
     if (
       right !== undefined &&
-      left !== undefined && 
+      left !== undefined &&
       left.type !== right.type &&
       !isListItem(left) &&
       isListItem(right)

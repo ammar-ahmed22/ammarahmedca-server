@@ -174,13 +174,15 @@ export class BlogResolverV2 {
             };
           }
 
-          if (block.type === "equation"){
+          if (block.type === "equation") {
             return {
               type: block.type,
-              content: [{
-                expression: block.equation.expression
-              }]
-            }
+              content: [
+                {
+                  expression: block.equation.expression,
+                },
+              ],
+            };
           }
         })
         .filter(b => b !== undefined)
@@ -239,8 +241,6 @@ export class BlogResolverV2 {
       hasFilter = true;
     }
 
-    
-
     const resp = await this.notion.databases.query({
       database_id: this.db_id,
       filter: hasFilter ? filters : undefined,
@@ -288,22 +288,26 @@ export class BlogResolverV2 {
   }
 
   @Query(returns => [String])
-  async blogCategories(){
-    const resp = await this.notion.databases.retrieve({ database_id: this.db_id });
-    if (resp.properties.category.type === "select"){
-      return resp.properties.category.select.options.map( opt => opt.name );
+  async blogCategories() {
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.db_id,
+    });
+    if (resp.properties.category.type === "select") {
+      return resp.properties.category.select.options.map(opt => opt.name);
     }
 
-    return []
+    return [];
   }
 
   @Query(returns => [String])
-  async blogTags(){
-    const resp = await this.notion.databases.retrieve({ database_id: this.db_id });
-    if (resp.properties.tags.type === "multi_select"){
-      return resp.properties.tags.multi_select.options.map( opt => opt.name );
+  async blogTags() {
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.db_id,
+    });
+    if (resp.properties.tags.type === "multi_select") {
+      return resp.properties.tags.multi_select.options.map(opt => opt.name);
     }
 
-    return []
+    return [];
   }
 }

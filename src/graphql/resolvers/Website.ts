@@ -24,15 +24,28 @@ export class WebsiteResolver {
     return {
       company: extractPropertyValue(page.properties.Name) as string,
       role: extractPropertyValue(page.properties.Role) as string,
-      description: extractPropertyValue(page.properties.Description) as IRichText[],
+      description: extractPropertyValue(
+        page.properties.Description
+      ) as IRichText[],
       type: extractPropertyValue(page.properties.Type) as string,
       skills: extractPropertyValue(page.properties.Skills) as string[],
       timeframe: extractPropertyValue(page.properties.Timeframe) as ITimeframe,
     };
   };
 
-  private createProjectMetadata = (page: PageObjectResponse): IProjectMetadata => {
-    const { name, description, date, languages, frameworks, type, external, github } = page.properties;
+  private createProjectMetadata = (
+    page: PageObjectResponse
+  ): IProjectMetadata => {
+    const {
+      name,
+      description,
+      date,
+      languages,
+      frameworks,
+      type,
+      external,
+      github,
+    } = page.properties;
     return {
       id: page.id,
       name: extractPropertyValue(name) as string,
@@ -42,9 +55,9 @@ export class WebsiteResolver {
       frameworks: extractPropertyValue(frameworks) as string[],
       type: extractPropertyValue(type) as string[],
       github: extractPropertyValue(github) as string | undefined,
-      external: extractPropertyValue(external) as string | undefined 
-    }
-  }
+      external: extractPropertyValue(external) as string | undefined,
+    };
+  };
 
   @Query(returns => [Experience], { description: "Gets all experiences." })
   async experiences() {
@@ -101,19 +114,19 @@ export class WebsiteResolver {
     });
 
     if (response.properties.Type.type === "select") {
-      return response.properties.Type.select.options.map(
-        option => option.name
-      );
+      return response.properties.Type.select.options.map(option => option.name);
     }
   }
 
-  @Query( returns => [ProjectMetadata])
+  @Query(returns => [ProjectMetadata])
   async projectMetadata(
     @Arg("onlyPublished", { nullable: true }) onlyPublished?: boolean,
-    @Arg("languages", returns => [String], { nullable: true }) languages?: string[],
-    @Arg("frameworks", returns => [String], { nullable: true }) frameworks?: string[],
-    @Arg("type", returns => [String], { nullable: true }) type?: string[] 
-  ){
+    @Arg("languages", returns => [String], { nullable: true })
+    languages?: string[],
+    @Arg("frameworks", returns => [String], { nullable: true })
+    frameworks?: string[],
+    @Arg("type", returns => [String], { nullable: true }) type?: string[]
+  ) {
     const filters: { or: { and: any[] }[] } = {
       or: [
         {
@@ -122,54 +135,59 @@ export class WebsiteResolver {
       ],
     };
     let hasFilters = false;
-    if (onlyPublished){
+    if (onlyPublished) {
       filters.or[0].and.push({
         property: "publish",
         checkbox: {
-          equals: true
-        }
-      })
+          equals: true,
+        },
+      });
       hasFilters = true;
     }
 
-    if (languages){
-      filters.or[0].and.push(...languages.map( l => ({
-        property: "languages",
-        multi_select: {
-          contains: l
-        }
-      })))
+    if (languages) {
+      filters.or[0].and.push(
+        ...languages.map(l => ({
+          property: "languages",
+          multi_select: {
+            contains: l,
+          },
+        }))
+      );
       hasFilters = true;
     }
 
-    if (frameworks){
-      filters.or[0].and.push(...frameworks.map( f => ({
-        property: "frameworks",
-        multi_select: {
-          contains: f
-        }
-      })))
+    if (frameworks) {
+      filters.or[0].and.push(
+        ...frameworks.map(f => ({
+          property: "frameworks",
+          multi_select: {
+            contains: f,
+          },
+        }))
+      );
       hasFilters = true;
     }
 
-    if (type){
-      filters.or[0].and.push(...type.map( t => ({
-        property: "type",
-        multi_select: {
-          contains: t
-        }
-      })))
+    if (type) {
+      filters.or[0].and.push(
+        ...type.map(t => ({
+          property: "type",
+          multi_select: {
+            contains: t,
+          },
+        }))
+      );
       hasFilters = true;
     }
 
     const resp = await this.notion.databases.query({
       database_id: this.projects_db_id,
-      filter: hasFilters ? filters : undefined
-    })
+      filter: hasFilters ? filters : undefined,
+    });
 
-    return resp.results.map( page => {
+    return resp.results.map(page => {
       return this.createProjectMetadata(page as PageObjectResponse);
-    })
-
+    });
   }
 }
