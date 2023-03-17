@@ -1,5 +1,11 @@
 import "reflect-metadata";
 import { ObjectType, Field } from "type-graphql";
+import {
+  IAnnotations,
+  AnnotationsColor,
+  IImage,
+  IRichText,
+} from "@ammarahmedca/types";
 
 @ObjectType({ description: "Object containing properties for rich text." })
 class Annotations implements IAnnotations {
@@ -18,22 +24,22 @@ class Annotations implements IAnnotations {
   @Field({ description: "Italicized text." })
   italic: boolean;
 
-  @Field({ description: "Colored text." })
-  color: string;
+  @Field(returns => String, { description: "Colored text." })
+  color: AnnotationsColor;
 
   @Field({ nullable: true, description: "Name of language for code block." })
   language?: string;
 }
 
-@ObjectType({ description: "Object containing text properties." })
-export class Text implements IText {
+@ObjectType()
+export class RichText implements IRichText {
   @Field({ description: "Text content for rich text." })
   plainText: string;
 
   @Field({ description: "HREF for link text.", nullable: true })
   href?: string;
 
-  @Field((type) => Annotations, { description: "Rich text annotations." })
+  @Field(type => Annotations, { description: "Rich text annotations." })
   annotations: Annotations;
 }
 
@@ -42,6 +48,6 @@ export class Image implements IImage {
   @Field({ description: "Image url." })
   url: string;
 
-  @Field({ description: "Image caption." })
-  caption: string;
+  @Field(returns => [RichText], { description: "Image caption." })
+  caption: IRichText[];
 }

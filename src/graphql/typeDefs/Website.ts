@@ -1,6 +1,13 @@
 import "reflect-metadata";
 import { Field, Int, ObjectType } from "type-graphql";
-import { Text } from "./Global";
+import { RichText } from "./Global";
+import {
+  IExperience,
+  IRichText,
+  ISkill,
+  ITimeframe,
+  IProjectMetadata,
+} from "@ammarahmedca/types";
 
 // EXPERIENCE
 @ObjectType({
@@ -22,18 +29,18 @@ export class Experience implements IExperience {
   @Field({ description: "Role at company." })
   role: string;
 
-  @Field((type) => [Text], { description: "Description of experience." })
-  description: IText[];
+  @Field(type => [RichText], { description: "Description of experience." })
+  description: IRichText[];
 
   @Field({ description: "Type/Field of experience." })
   type: string;
 
-  @Field((type) => [String], {
+  @Field(type => [String], {
     description: "Skills learned/employed at experience.",
   })
   skills: string[];
 
-  @Field((type) => Timeframe, { description: "Duration of experience." })
+  @Field(type => Timeframe, { description: "Duration of experience." })
   timeframe: ITimeframe;
 }
 
@@ -45,6 +52,36 @@ export class Skill implements ISkill {
   @Field({ description: "Type categorization of skill." })
   type: string;
 
-  @Field((type) => Int, { description: "Competency in skill out of 100." })
+  @Field(type => Int, { description: "Competency in skill out of 100." })
   value: number;
+}
+
+@ObjectType({ description: "Metadata for project posts" })
+export class ProjectMetadata implements IProjectMetadata {
+  @Field()
+  id: string;
+
+  @Field()
+  name: string;
+
+  @Field(returns => [RichText])
+  description: IRichText[];
+
+  @Field(returns => [String])
+  languages: string[];
+
+  @Field(returns => [String])
+  frameworks: string[];
+
+  @Field(returns => [String])
+  type: string[];
+
+  @Field(returns => Timeframe)
+  dateRange: ITimeframe;
+
+  @Field({ nullable: true })
+  external?: string;
+
+  @Field({ nullable: true })
+  github?: string;
 }

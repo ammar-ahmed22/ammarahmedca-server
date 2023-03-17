@@ -37,7 +37,7 @@ export const readHTML = (relativePath: string): string => {
  */
 export const getParamNames = (htmlString: string): string[] | undefined => {
   const paramRegex = /\${{[A-Za-z\-]+}}/gm;
-  return htmlString.match(paramRegex)?.map((item) => {
+  return htmlString.match(paramRegex)?.map(item => {
     return item.slice(3, -2);
   });
 };
@@ -56,7 +56,7 @@ export const insertParams = (
   let copy = htmlString;
   const paramNames = getParamNames(htmlString);
   if (!paramNames) throw new Error("No params");
-  Object.keys(params).forEach((param) => {
+  Object.keys(params).forEach(param => {
     if (!paramNames.includes(param))
       throw new Error(`param: ${param} does not exist in html.`);
     copy = copy.replace(`\$\{\{${param}\}\}`, `${params[param]}`);

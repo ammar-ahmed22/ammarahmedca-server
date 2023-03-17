@@ -37,7 +37,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       sortedSchema: false,
-    }
+    },
   });
 
   const app = express();
@@ -54,21 +54,24 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
         : ApolloServerPluginLandingPageLocalDefault(),
     ],
     formatError: (formattedError, error) => {
-      if (formattedError.message === "Access denied! You need to be authorized to perform this action!"){
+      if (
+        formattedError.message ===
+        "Access denied! You need to be authorized to perform this action!"
+      ) {
         const extensions = formattedError.extensions;
         return {
           ...formattedError,
           extensions: {
             ...extensions,
-            code: "UNAUTHENTICATED"
-          }
-        }
+            code: "UNAUTHENTICATED",
+          },
+        };
       }
       return formattedError;
-    }
+    },
   });
 
-  if (process.env.NODE_ENV !== "production"){
+  if (process.env.NODE_ENV !== "production") {
     if (process.env.MONGO_URI) await connect(process.env.MONGO_URI);
     // Creating my own user and a test user
     const exists = await UserModel.findOne({ email: "a353ahme@uwaterloo.ca" });
