@@ -31,12 +31,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 
 (async () => {
   const schema = await buildSchema({
-    resolvers: [
-      BlogResolver,
-      WebsiteResolver,
-      UserResolver,
-      GameResolver,
-    ],
+    resolvers: [BlogResolver, WebsiteResolver, UserResolver, GameResolver],
     dateScalarMode: "timestamp",
     authChecker,
     emitSchemaFile: {

@@ -7,7 +7,13 @@ import { extractPropertyValue } from "../../utils/notion";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
 
 import { Experience, ProjectMetadata, Skill } from "../typeDefs/Website";
-import { IProjectMetadata, IRichText, ISkill, IExperience, ITimeframe } from "@ammarahmedca/types";
+import {
+  IProjectMetadata,
+  IRichText,
+  ISkill,
+  IExperience,
+  ITimeframe,
+} from "@ammarahmedca/types";
 
 @Resolver()
 export class WebsiteResolver {
@@ -63,7 +69,7 @@ export class WebsiteResolver {
       type: extractPropertyValue(page.properties.Type) as string,
       value: extractPropertyValue(page.properties.Competency) as number,
     };
-  }
+  };
 
   @Query(returns => [Experience], { description: "Gets all experiences." })
   async experiences() {
@@ -84,7 +90,9 @@ export class WebsiteResolver {
   @Query(returns => [Skill], {
     description: "Gets all skill values with optional filtering by type.",
   })
-  async skills(@Arg("onlyType", { nullable: true }) onlyType?: string): Promise<ISkill[]> {
+  async skills(
+    @Arg("onlyType", { nullable: true }) onlyType?: string
+  ): Promise<ISkill[]> {
     const filter: any = {
       or: [],
     };
@@ -102,8 +110,8 @@ export class WebsiteResolver {
       filter,
     });
 
-    return response.results.map((page) => {
-      return this.createSkill(page as PageObjectResponse)
+    return response.results.map(page => {
+      return this.createSkill(page as PageObjectResponse);
     });
   }
 
@@ -192,41 +200,45 @@ export class WebsiteResolver {
   }
 
   @Query(returns => [String])
-  async projectFrameworks(){
+  async projectFrameworks() {
     const resp = await this.notion.databases.retrieve({
-      database_id: this.projects_db_id
+      database_id: this.projects_db_id,
     });
 
-    if (resp.properties.frameworks.type === "multi_select"){
-      return resp.properties.frameworks.multi_select.options.map( opt => opt.name );
+    if (resp.properties.frameworks.type === "multi_select") {
+      return resp.properties.frameworks.multi_select.options.map(
+        opt => opt.name
+      );
     }
 
-    return []
+    return [];
   }
 
   @Query(returns => [String])
-  async projectTypes(){
+  async projectTypes() {
     const resp = await this.notion.databases.retrieve({
-      database_id: this.projects_db_id
+      database_id: this.projects_db_id,
     });
 
-    if (resp.properties.type.type === "multi_select"){
-      return resp.properties.type.multi_select.options.map( opt => opt.name );
+    if (resp.properties.type.type === "multi_select") {
+      return resp.properties.type.multi_select.options.map(opt => opt.name);
     }
 
-    return []
+    return [];
   }
 
   @Query(returns => [String])
-  async projectLanguages(){
+  async projectLanguages() {
     const resp = await this.notion.databases.retrieve({
-      database_id: this.projects_db_id
+      database_id: this.projects_db_id,
     });
 
-    if (resp.properties.languages.type === "multi_select"){
-      return resp.properties.languages.multi_select.options.map( opt => opt.name );
+    if (resp.properties.languages.type === "multi_select") {
+      return resp.properties.languages.multi_select.options.map(
+        opt => opt.name
+      );
     }
 
-    return []
+    return [];
   }
 }

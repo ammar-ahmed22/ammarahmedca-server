@@ -31,8 +31,6 @@ class Annotations implements IAnnotations {
   language?: string;
 }
 
-
-
 @ObjectType()
 export class RichText implements IRichText {
   @Field({ description: "Text content for rich text." })

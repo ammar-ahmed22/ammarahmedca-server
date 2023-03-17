@@ -19,10 +19,13 @@ import { isFullUser, Client, isFullBlock } from "@notionhq/client";
  * @param {RichTextItemResponse} item Notion rich text
  * @returns {RichText}
  */
-export const mapRichText = (item: RichTextItemResponse, language?: string): IRichText => {
+export const mapRichText = (
+  item: RichTextItemResponse,
+  language?: string
+): IRichText => {
   return {
     plainText: item.plain_text,
-    annotations: {...item.annotations, language },
+    annotations: { ...item.annotations, language },
     href: item.href ?? undefined,
   };
 };
@@ -36,7 +39,14 @@ export const mapRichText = (item: RichTextItemResponse, language?: string): IRic
  */
 export const extractPropertyValue = (
   property: DatabaseProperty
-): string | string[] | boolean | ITimeframe | IRichText[] | number | undefined => {
+):
+  | string
+  | string[]
+  | boolean
+  | ITimeframe
+  | IRichText[]
+  | number
+  | undefined => {
   if (property.type === "title") {
     return property.title.map(item => item.plain_text).join("");
   }
@@ -81,8 +91,8 @@ export const extractPropertyValue = (
     return property.url ?? undefined;
   }
 
-  if (property.type === "number"){
-    return property.number?.valueOf()
+  if (property.type === "number") {
+    return property.number?.valueOf();
   }
 };
 

@@ -16,7 +16,7 @@ import {
   IUnmergedBlock,
   IListItem,
   IPost,
-  ITimeframe
+  ITimeframe,
 } from "@ammarahmedca/types";
 import {
   extractPropertyValue,
@@ -132,7 +132,9 @@ export class BlogResolver {
             const type = block.type;
             return {
               type: block.type,
-              content: block[type].rich_text.map((r: RichTextItemResponse) => mapRichText(r)),
+              content: block[type].rich_text.map((r: RichTextItemResponse) =>
+                mapRichText(r)
+              ),
             };
           }
 
@@ -167,7 +169,9 @@ export class BlogResolver {
           ) {
             const type = block.type;
             const listItem: IListItem = {
-              content: block[type].rich_text.map((r: RichTextItemResponse) => mapRichText(r)),
+              content: block[type].rich_text.map((r: RichTextItemResponse) =>
+                mapRichText(r)
+              ),
             };
             await getAllListChildren(this.notion, block, listItem);
             return {
@@ -187,12 +191,12 @@ export class BlogResolver {
             };
           }
 
-          if (block.type === "code"){
+          if (block.type === "code") {
             const { language } = block.code;
             return {
               type: block.type,
-              content: block.code.rich_text.map(r => mapRichText(r, language))
-            }
+              content: block.code.rich_text.map(r => mapRichText(r, language)),
+            };
           }
         })
         .filter(b => b !== undefined)
