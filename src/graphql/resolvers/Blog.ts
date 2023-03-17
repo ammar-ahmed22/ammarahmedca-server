@@ -1,380 +1,323 @@
-import "reflect-metadata";
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
-import { Client, isFullPage } from "@notionhq/client";
+import { Client } from "@notionhq/client";
+import { Query, Resolver, Arg } from "type-graphql";
 import {
   PartialBlockObjectResponse,
   BlockObjectResponse,
+  ListBlockChildrenResponse,
+  PageObjectResponse,
+  RichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { Arg, Query, Resolver } from "type-graphql";
-import { Content, FilterOpts, Metadata } from "../typeDefs/Blog";
-import { GraphQLError } from "graphql";
-
-import { readProperty, readBlockContent, createDate } from "../../utils/Notion";
-import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { isText } from "../../types/typeGuards";
+import {
+  IPostMetadata,
+  IRichText,
+  IBlock,
+  IUnmergedBlock,
+  IListItem,
+  IPost,
+  ITimeframe
+} from "@ammarahmedca/types";
+import {
+  extractPropertyValue,
+  mapRichText,
+  getAllListChildren,
+  mergeListItems,
+} from "../../utils/notion";
+import { PostMetadata, Post } from "../typeDefs/Blog";
 
 @Resolver()
 export class BlogResolver {
   constructor(
-    private notion = new Client({ auth: process.env.NOTION_INTEGRATION_KEY }),
-    private blogdbID = process.env.NOTION_BLOG_DB_ID
+    private notion: Client = new Client({
+      auth: process.env.NOTION_INTEGRATION_KEY,
+    }),
+    private db_id: string = process.env.NOTION_BLOG_DB_ID as string
   ) {}
 
-  private getPaginatedBlocks = async (
-    pageId: string
-  ): Promise<(PartialBlockObjectResponse | BlockObjectResponse)[]> => {
-    let blocks = await this.notion.blocks.children.list({ block_id: pageId });
-    const res = blocks.results;
-    while (blocks.next_cursor) {
-      blocks = await this.notion.blocks.children.list({
-        block_id: pageId,
-        start_cursor: blocks.next_cursor,
-      });
-      res.push(...blocks.results);
-    }
+  private getAllPaginatedBlocks = async (blockId: string) => {
+    let hasNext = true;
+    let startCursor: string | undefined = undefined;
+    let result: (PartialBlockObjectResponse | BlockObjectResponse)[] = [];
+    while (hasNext) {
+      const resp: ListBlockChildrenResponse =
+        await this.notion.blocks.children.list({
+          block_id: blockId,
+          start_cursor: startCursor,
+          page_size: 100,
+        });
 
-    return res;
+      hasNext = resp.has_more;
+      startCursor = resp.next_cursor ?? undefined;
+      result = result.concat(resp.results);
+    }
+    return result;
   };
 
-  private calculateReadtime = (content: IContent[], wpm: number = 200) => {
-    let wordCount = 0;
-    for (const block of content) {
-      if (block.type !== "image" && block.type !== "code") {
-        for (const text of block.content) {
-          if (isText(text)) {
-            const words = text.plainText
-              .split(" ")
-              .filter(word => word !== "" && word !== ".");
-            wordCount += words.length;
-          }
-        }
-      }
-    }
-
-    return Math.round(wordCount / wpm);
+  private createSlugFromString = (str: string) => {
+    return str
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, "")
+      .split(" ")
+      .join("-");
   };
 
-  private hyphenate = (str: string) => str.toLowerCase().split(" ").join("-");
+  private addSlug = async (page_id: string, slug: string) => {
+    await this.notion.pages.update({
+      page_id,
+      properties: {
+        slug: {
+          rich_text: [
+            {
+              text: {
+                content: slug,
+              },
+            },
+          ],
+        },
+      },
+    });
+  };
 
   private createMetadata = async (
     page: PageObjectResponse
-  ): Promise<IMetadata> => {
-    const isBlog = readProperty(page.properties.isBlog) as boolean;
+  ): Promise<IPostMetadata> => {
+    const { name, description, category, tags, date, slug } = page.properties;
 
-    let readTime: number | undefined = undefined;
-    let pathname = readProperty(page.properties.Pathname);
-    let published = createDate(readProperty(page.properties.Published).start);
+    const nameString = extractPropertyValue(name) as string;
+    const extractedSlug: IRichText[] = extractPropertyValue(
+      slug
+    ) as IRichText[];
+    const nameSlug = this.createSlugFromString(nameString);
+    if (!extractedSlug.length) await this.addSlug(page.id, nameSlug);
 
-    if (isBlog) {
-      const blocks = await this.notion.blocks.children.list({
-        block_id: page.id,
-      });
-
-      const blogContent = readBlockContent(blocks.results);
-
-      if (blogContent) {
-        readTime = this.calculateReadtime(blogContent);
+    let image: string | undefined;
+    if (page.cover) {
+      if (page.cover.type === "external") {
+        image = page.cover.external.url;
       }
 
-      if (!pathname) {
-        pathname = this.hyphenate(readProperty(page.properties.Name));
-        // updating pathname to hyphenated
-        const response = await this.notion.pages.update({
-          page_id: page.id,
-          properties: {
-            Pathname: {
-              rich_text: [
-                {
-                  type: "text",
-                  text: {
-                    content: pathname,
-                  },
-                },
-              ],
-            },
-          },
-        });
+      if (page.cover.type === "file") {
+        image = page.cover.file.url;
       }
     }
 
     return {
       id: page.id,
-      name: readProperty(page.properties.Name),
-      lastEdited: new Date(page.last_edited_time),
-      pathname,
-      timeline: readProperty(page.properties.Timeline) as string,
-      type: readProperty(page.properties.Type) as string[],
-      frameworks: readProperty(page.properties.Frameworks) as string[],
-      languages: readProperty(page.properties.Languages) as string[],
-      github: readProperty(page.properties.GitHub) as string,
-      external: readProperty(page.properties.External) as string,
-      description: readProperty(page.properties.Description) as string,
-      published,
-      isBlog,
-      isProject: readProperty(page.properties.isProject) as boolean,
-      category: readProperty(page.properties.Category) as string,
-      isPublished: readProperty(page.properties.Publish) as boolean,
-      readTime,
+      name: extractPropertyValue(name) as string,
+      description: extractPropertyValue(description) as IRichText[],
+      category: extractPropertyValue(category) as string,
+      tags: extractPropertyValue(tags) as string[],
+      date: (extractPropertyValue(date) as ITimeframe).start,
+      slug: !extractedSlug.length
+        ? nameSlug
+        : extractedSlug.map(r => r.plainText).join(""),
+      image,
     };
   };
 
-  @Query(returns => Metadata, {
-    description: "Gets metadata by id or pathname",
-  })
-  async metadata(
-    @Arg("id", { nullable: true }) id?: string,
-    @Arg("pathname", { nullable: true }) pathname?: string
-  ) {
-    if (this.blogdbID) {
-      if (id) {
-        const response = await this.notion.databases.query({
-          database_id: this.blogdbID,
-          filter: {
-            or: [],
-          },
-        });
+  private createBlocks = async (
+    blocks: BlockObjectResponse[]
+  ): Promise<IBlock[]> => {
+    const unmerged = (await Promise.all(
+      blocks
+        .map(async (block): Promise<IUnmergedBlock | undefined> => {
+          if (
+            block.type === "heading_1" ||
+            block.type === "heading_2" ||
+            block.type === "heading_3" ||
+            block.type === "paragraph" ||
+            block.type === "quote"
+          ) {
+            const type = block.type;
+            return {
+              type: block.type,
+              content: block[type].rich_text.map((r: RichTextItemResponse) => mapRichText(r)),
+            };
+          }
 
-        const pages = response.results.filter(page => page.id === id);
-        console.log({ pages });
-        if (pages.length <= 0) throw new GraphQLError("No results with id.");
+          if (block.type === "image") {
+            if (block.image.type === "external") {
+              return {
+                type: "image",
+                content: [
+                  {
+                    url: block.image.external.url,
+                    caption: block.image.caption.map(r => mapRichText(r)),
+                  },
+                ],
+              };
+            }
+            if (block.image.type === "file") {
+              return {
+                type: "image",
+                content: [
+                  {
+                    url: block.image.file.url,
+                    caption: block.image.caption.map(r => mapRichText(r)),
+                  },
+                ],
+              };
+            }
+          }
 
-        const page = pages[0];
-        if (isFullPage(page)) {
-          const metadata = await this.createMetadata(page);
-          return metadata;
-        }
-      }
+          if (
+            block.type === "bulleted_list_item" ||
+            block.type === "numbered_list_item"
+          ) {
+            const type = block.type;
+            const listItem: IListItem = {
+              content: block[type].rich_text.map((r: RichTextItemResponse) => mapRichText(r)),
+            };
+            await getAllListChildren(this.notion, block, listItem);
+            return {
+              type,
+              content: listItem,
+            };
+          }
 
-      if (pathname) {
-        const response = await this.notion.databases.query({
-          database_id: this.blogdbID,
-          filter: {
-            or: [
-              {
-                property: "Pathname",
-                rich_text: {
-                  contains: pathname,
+          if (block.type === "equation") {
+            return {
+              type: block.type,
+              content: [
+                {
+                  expression: block.equation.expression,
                 },
-              },
-            ],
-          },
-        });
+              ],
+            };
+          }
 
-        if (response.results.length <= 0)
-          throw new GraphQLError("No results with pathname");
-
-        const page = response.results[0];
-        if (isFullPage(page)) {
-          const metadata = await this.createMetadata(page);
-          return metadata;
-        }
-      }
-    }
-  }
-
-  @Query(returns => [Metadata], { description: "Gets all metadata" })
-  async allMetadata() {
-    if (this.blogdbID) {
-      const response = await this.notion.databases.query({
-        database_id: this.blogdbID,
-        filter: {
-          or: [],
-        },
-      });
-
-      const result = await Promise.all(
-        response.results.map(async result => {
-          if (isFullPage(result)) {
-            const metadata = await this.createMetadata(result);
-            return metadata;
+          if (block.type === "code"){
+            const { language } = block.code;
+            return {
+              type: block.type,
+              content: block.code.rich_text.map(r => mapRichText(r, language))
+            }
           }
         })
-      );
+        .filter(b => b !== undefined)
+    )) as IUnmergedBlock[];
+    return mergeListItems(unmerged).filter(b => b);
+  };
 
-      return result;
-    }
-    throw new GraphQLError("error connecting to database.");
-  }
-
-  @Query(returns => [Metadata], { description: "Gets blog post metadata" })
+  @Query(returns => [PostMetadata])
   async blogMetadata(
-    @Arg("publishedOnly", { nullable: true }) publishedOnly: boolean = false
-  ) {
-    if (this.blogdbID) {
-      const filter = !publishedOnly
-        ? {
-            or: [
-              {
-                property: "isBlog",
-                checkbox: {
-                  equals: true,
-                },
-              },
-            ],
-          }
-        : {
-            and: [
-              {
-                property: "isBlog",
-                checkbox: {
-                  equals: true,
-                },
-              },
-              {
-                property: "Publish",
-                checkbox: {
-                  equals: true,
-                },
-              },
-            ],
-          };
+    @Arg("onlyPublished", { nullable: true }) onlyPublished?: boolean,
+    @Arg("category", { nullable: true }) category?: string,
+    @Arg("tags", returns => [String], { nullable: true }) tags?: string[]
+  ): Promise<IPostMetadata[]> {
+    const publishedFilter = {
+      property: "publish",
+      checkbox: {
+        equals: true,
+      },
+    };
 
-      const response = await this.notion.databases.query({
-        database_id: this.blogdbID,
-        filter,
-      });
+    const categoryFilter = {
+      property: "category",
+      select: {
+        equals: category as string,
+      },
+    };
 
-      const result = await Promise.all(
-        response.results.map(async result => {
-          if (isFullPage(result)) {
-            const metadata = await this.createMetadata(result);
+    const tagsFilters = tags?.map(tag => ({
+      property: "tags",
+      multi_select: {
+        contains: tag,
+      },
+    }));
 
-            return metadata;
-          }
-        })
-      );
+    let hasFilter = false;
 
-      return result;
-    }
-    throw new GraphQLError("error connecting to database.");
-  }
-
-  @Query(returns => [Metadata], { description: "Gets project post metadata" })
-  async projectMetadata() {
-    if (this.blogdbID) {
-      const response = await this.notion.databases.query({
-        database_id: this.blogdbID,
-        filter: {
-          and: [
-            {
-              property: "isProject",
-              checkbox: {
-                equals: true,
-              },
-            },
-            {
-              property: "Publish",
-              checkbox: {
-                equals: true,
-              },
-            },
-          ],
+    const filters: { or: { and: any[] }[] } = {
+      or: [
+        {
+          and: [],
         },
-      });
-
-      const result = await Promise.all(
-        response.results.map(async result => {
-          if (isFullPage(result)) {
-            const metadata = await this.createMetadata(result);
-            return metadata;
-          }
-        })
-      );
-
-      return result;
+      ],
+    };
+    if (onlyPublished) {
+      filters.or[0].and.push(publishedFilter);
+      hasFilter = true;
     }
 
-    throw new GraphQLError("error connecting to database.");
+    if (category) {
+      filters.or[0].and.push(categoryFilter);
+      hasFilter = true;
+    }
+
+    if (tags && tagsFilters) {
+      filters.or[0].and.push(...tagsFilters);
+      hasFilter = true;
+    }
+
+    const resp = await this.notion.databases.query({
+      database_id: this.db_id,
+      filter: hasFilter ? filters : undefined,
+    });
+
+    const result = await Promise.all(
+      resp.results.map(async page => {
+        const metadata = await this.createMetadata(page as PageObjectResponse);
+        return metadata;
+      })
+    );
+
+    return result;
   }
 
-  @Query(returns => [Content], {
-    description: "Gets content for blog by pathname.",
-  })
-  async content(@Arg("pathname") pathname: string) {
-    if (this.blogdbID) {
-      const response = await this.notion.databases.query({
-        database_id: this.blogdbID,
-        filter: {
-          or: [
-            {
-              property: "Pathname",
-              rich_text: {
-                contains: pathname,
-              },
+  @Query(returns => Post)
+  async postBySlug(@Arg("slug") slug: string): Promise<IPost> {
+    const resp = await this.notion.databases.query({
+      database_id: this.db_id,
+      filter: {
+        and: [
+          {
+            property: "slug",
+            rich_text: {
+              equals: slug,
             },
-          ],
-        },
-      });
+          },
+        ],
+      },
+    });
 
-      if (response.results.length === 0) {
-        throw new GraphQLError("Nothing found!");
-      }
+    if (!resp.results) throw new Error(`No post found with slug: '${slug}'`);
 
-      if (!isFullPage(response.results[0])) {
-        throw new GraphQLError("Page not found!");
-      }
+    const [page] = resp.results;
+    const blocks = await this.getAllPaginatedBlocks(page.id);
+    const metadata = await this.createMetadata(page as PageObjectResponse);
+    const generatedBlocks = await this.createBlocks(
+      blocks as BlockObjectResponse[]
+    );
 
-      const [page] = response.results;
-
-      const blocks = await this.notion.blocks.children.list({
-        block_id: page.id,
-      });
-
-      if (!blocks) {
-        throw new GraphQLError("Error reading content");
-      }
-
-      const allBlocks = await this.getPaginatedBlocks(page.id);
-
-      return readBlockContent(allBlocks);
-    }
-
-    throw new GraphQLError("error connecting to database.");
+    return {
+      metadata,
+      content: generatedBlocks,
+    };
   }
 
-  @Query(returns => FilterOpts)
-  async filterOpts() {
-    if (this.blogdbID) {
-      const response = await this.notion.databases.retrieve({
-        database_id: this.blogdbID,
-      });
-
-      const res: IFilterOpts = {
-        frameworks: [],
-        type: [],
-        languages: [],
-        category: [],
-      };
-
-      if (response.properties.Frameworks.type === "multi_select") {
-        res.frameworks =
-          response.properties.Frameworks.multi_select.options.map(
-            option => option.name
-          );
-      }
-
-      if (response.properties.Type.type === "multi_select") {
-        res.type = response.properties.Type.multi_select.options.map(
-          option => option.name
-        );
-      }
-
-      if (response.properties.Languages.type === "multi_select") {
-        res.languages = response.properties.Languages.multi_select.options.map(
-          option => option.name
-        );
-      }
-
-      if (response.properties.Category.type === "select") {
-        res.languages = response.properties.Category.select.options.map(
-          option => option.name
-        );
-      }
-
-      return res;
+  @Query(returns => [String])
+  async blogCategories() {
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.db_id,
+    });
+    if (resp.properties.category.type === "select") {
+      return resp.properties.category.select.options.map(opt => opt.name);
     }
 
-    throw new GraphQLError("error connecting to database.");
+    return [];
+  }
+
+  @Query(returns => [String])
+  async blogTags() {
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.db_id,
+    });
+    if (resp.properties.tags.type === "multi_select") {
+      return resp.properties.tags.multi_select.options.map(opt => opt.name);
+    }
+
+    return [];
   }
 }

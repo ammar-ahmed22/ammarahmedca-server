@@ -31,17 +31,7 @@ class Annotations implements IAnnotations {
   language?: string;
 }
 
-@ObjectType({ description: "Object containing text properties." })
-export class Text implements IText {
-  @Field({ description: "Text content for rich text." })
-  plainText: string;
 
-  @Field({ description: "HREF for link text.", nullable: true })
-  href?: string;
-
-  @Field(type => Annotations, { description: "Rich text annotations." })
-  annotations: Annotations;
-}
 
 @ObjectType()
 export class RichText implements IRichText {

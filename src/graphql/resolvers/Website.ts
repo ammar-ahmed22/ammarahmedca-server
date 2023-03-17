@@ -3,13 +3,11 @@ import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 import { Client, isFullPage } from "@notionhq/client";
 import { Arg, Query, Resolver } from "type-graphql";
-import { readProperty } from "../../utils/Notion";
-import { extractPropertyValue } from "../../utils/notion-v2";
+import { extractPropertyValue } from "../../utils/notion";
 import { PageObjectResponse } from "@notionhq/client/build/src/api-endpoints";
-import { createDate } from "../../utils/Notion";
 
 import { Experience, ProjectMetadata, Skill } from "../typeDefs/Website";
-import { IProjectMetadata, IRichText } from "@ammarahmedca/types";
+import { IProjectMetadata, IRichText, ISkill, IExperience, ITimeframe } from "@ammarahmedca/types";
 
 @Resolver()
 export class WebsiteResolver {
@@ -59,6 +57,14 @@ export class WebsiteResolver {
     };
   };
 
+  private createSkill = (page: PageObjectResponse): ISkill => {
+    return {
+      name: extractPropertyValue(page.properties.Name) as string,
+      type: extractPropertyValue(page.properties.Type) as string,
+      value: extractPropertyValue(page.properties.Competency) as number,
+    };
+  }
+
   @Query(returns => [Experience], { description: "Gets all experiences." })
   async experiences() {
     const response = await this.notion.databases.query({
@@ -78,7 +84,7 @@ export class WebsiteResolver {
   @Query(returns => [Skill], {
     description: "Gets all skill values with optional filtering by type.",
   })
-  async skills(@Arg("onlyType", { nullable: true }) onlyType?: string) {
+  async skills(@Arg("onlyType", { nullable: true }) onlyType?: string): Promise<ISkill[]> {
     const filter: any = {
       or: [],
     };
@@ -96,14 +102,8 @@ export class WebsiteResolver {
       filter,
     });
 
-    return response.results.map(page => {
-      if (isFullPage(page)) {
-        return {
-          name: readProperty(page.properties.Name),
-          type: readProperty(page.properties.Type),
-          value: readProperty(page.properties.Competency),
-        };
-      }
+    return response.results.map((page) => {
+      return this.createSkill(page as PageObjectResponse)
     });
   }
 
@@ -189,5 +189,44 @@ export class WebsiteResolver {
     return resp.results.map(page => {
       return this.createProjectMetadata(page as PageObjectResponse);
     });
+  }
+
+  @Query(returns => [String])
+  async projectFrameworks(){
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.projects_db_id
+    });
+
+    if (resp.properties.frameworks.type === "multi_select"){
+      return resp.properties.frameworks.multi_select.options.map( opt => opt.name );
+    }
+
+    return []
+  }
+
+  @Query(returns => [String])
+  async projectTypes(){
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.projects_db_id
+    });
+
+    if (resp.properties.type.type === "multi_select"){
+      return resp.properties.type.multi_select.options.map( opt => opt.name );
+    }
+
+    return []
+  }
+
+  @Query(returns => [String])
+  async projectLanguages(){
+    const resp = await this.notion.databases.retrieve({
+      database_id: this.projects_db_id
+    });
+
+    if (resp.properties.languages.type === "multi_select"){
+      return resp.properties.languages.multi_select.options.map( opt => opt.name );
+    }
+
+    return []
   }
 }

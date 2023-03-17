@@ -21,7 +21,6 @@ import { buildSchema } from "type-graphql";
 import { printSchema } from "graphql";
 
 import { BlogResolver } from "./graphql/resolvers/Blog";
-import { BlogResolverV2 } from "./graphql/resolvers/Blogv2";
 import { WebsiteResolver } from "./graphql/resolvers/Website";
 import { UserResolver } from "./graphql/resolvers/User";
 import { GameResolver } from "./graphql/resolvers/Game";
@@ -33,11 +32,10 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 (async () => {
   const schema = await buildSchema({
     resolvers: [
-      // BlogResolver,
+      BlogResolver,
       WebsiteResolver,
       UserResolver,
       GameResolver,
-      BlogResolverV2,
     ],
     dateScalarMode: "timestamp",
     authChecker,

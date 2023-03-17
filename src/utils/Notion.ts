@@ -1,173 +1,190 @@
-import { isFullBlock } from "@notionhq/client";
 import {
-  BlockObjectResponse,
-  PartialBlockObjectResponse,
+  DatabaseProperty,
+  IRichText,
+  IListItem,
+  IUnmergedBlock,
+  IBlock,
+  ITimeframe,
+  IList,
+} from "@ammarahmedca/types";
+import {
   RichTextItemResponse,
+  BlockObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints";
-import { isContentArray } from "../types/typeGuards";
+import { isFullUser, Client, isFullBlock } from "@notionhq/client";
 
-export const readProperty = (property: Record<string, any>) => {
-  const { type } = property;
-  const value = property[type as string];
+/**
+ * Maps Notion rich text to custom rich text type
+ *
+ * @param {RichTextItemResponse} item Notion rich text
+ * @returns {RichText}
+ */
+export const mapRichText = (item: RichTextItemResponse, language?: string): IRichText => {
+  return {
+    plainText: item.plain_text,
+    annotations: {...item.annotations, language },
+    href: item.href ?? undefined,
+  };
+};
 
-  switch (type as string) {
-    case "title":
-    case "rich_text":
-      return value.length > 0 ? value[0].plain_text : "";
-    case "multi_select":
-      return value.map((item: Record<string, string>) => item.name);
-    case "select":
-      return value ? value.name : "";
-    case "url":
-      return value;
-    case "date":
-      const { start, end } = value;
-      return { start, end };
-    case "number":
-    case "checkbox":
-      return value;
-    default:
-      throw new Error("unable to get property content");
+/**
+ * Extracts values from Notion database property
+ *
+ * @private
+ * @param {DatabaseProperty} property Notion database property
+ * @returns {*}
+ */
+export const extractPropertyValue = (
+  property: DatabaseProperty
+): string | string[] | boolean | ITimeframe | IRichText[] | number | undefined => {
+  if (property.type === "title") {
+    return property.title.map(item => item.plain_text).join("");
+  }
+
+  if (property.type === "rich_text") {
+    return property.rich_text.map(r => mapRichText(r));
+  }
+
+  if (property.type === "checkbox") {
+    return property.checkbox;
+  }
+
+  if (property.type === "date" && property.date) {
+    return {
+      start: new Date(property.date.start),
+      end: property.date.end ? new Date(property.date.end) : undefined,
+    };
+  }
+
+  if (property.type === "people") {
+    const result: string[] = [];
+    property.people.reduce((acc, curr) => {
+      if (isFullUser(curr) && curr.name) {
+        acc.push(curr.name);
+      }
+      return acc;
+    }, result);
+    return result;
+  }
+
+  if (property.type === "multi_select") {
+    return property.multi_select.map(item => {
+      return item.name;
+    });
+  }
+
+  if (property.type === "select") {
+    return property.select?.name;
+  }
+
+  if (property.type === "url") {
+    return property.url ?? undefined;
+  }
+
+  if (property.type === "number"){
+    return property.number?.valueOf()
   }
 };
 
-export const createDate = (yyyy_mm_dd: string) => {
-  const [year, month, day] = yyyy_mm_dd.split("-").map(str => parseInt(str));
-  return new Date(year, month - 1, day, 0, 0, 0);
+/**
+ * Recursively gets all list children
+ *
+ * @async
+ * @param {BlockObjectResponse} block  List block item
+ * @param {ListItem} item Custom list item type
+ * @returns {Promise<ListItem>}
+ */
+export const getAllListChildren = async (
+  notion: Client,
+  block: BlockObjectResponse,
+  item: IListItem
+): Promise<IListItem | void> => {
+  if (
+    block.type === "bulleted_list_item" ||
+    block.type === "numbered_list_item"
+  ) {
+    if (!block.has_children) {
+      return item;
+    } else {
+      const resp = await notion.blocks.children.list({
+        block_id: block.id,
+        page_size: 100,
+      });
+      for (const b of resp.results) {
+        if (isFullBlock(b)) {
+          if (
+            b.type === "numbered_list_item" ||
+            b.type === "bulleted_list_item"
+          ) {
+            const type = b.type;
+            const newItem: IListItem = {
+              content: b[type].rich_text.map(mapRichText),
+            };
+            if (item.children) {
+              item.children.push(newItem);
+            } else {
+              item.children = [newItem];
+            }
+            await getAllListChildren(notion, b, newItem);
+          }
+        }
+      }
+    }
+  }
 };
 
-export const mergeListItems = (content: IContent[]): IContent[] => {
-  const isListItem = (block: IContent): boolean => {
-    return (
-      block.type === "numbered_list_item" || block.type === "bulleted_list_item"
-    );
-  };
-
-  const isList = (block: IContent): boolean => {
-    return block.type === "numbered_list" || block.type === "bulleted_list";
-  };
-
-  const listItemToList = (type: string): string => type.replace("_item", "");
-
-  const merged: IContent[] = [];
-
-  for (const curr of content) {
-    const last = merged[merged.length - 1];
-
-    if (isListItem(curr)) {
-      if (!isList(last)) {
+/**
+ * Merges list items into list objects
+ *
+ * @param {UnmergedBlock[]} unmerged Unmerged block array
+ * @returns {Block[]}
+ */
+export const mergeListItems = (unmerged: IUnmergedBlock[]): IBlock[] => {
+  const merged: IBlock[] = [];
+  const isListItem = (b: IUnmergedBlock) =>
+    b !== undefined && b.type.includes("list_item");
+  let l = 0;
+  let r = 1;
+  let list: IList | undefined;
+  let listType: "numbered_list" | "bulleted_list" | undefined;
+  while (l < unmerged.length) {
+    const left = unmerged[l];
+    const right = r < unmerged.length ? unmerged[r] : undefined;
+    if (list) {
+      if (!right || listType !== right.type.slice(0, -5)) {
         merged.push({
-          type: listItemToList(curr.type),
-          content: [],
+          type: listType as "numbered_list" | "bulleted_list",
+          content: [list],
         });
+        listType = undefined;
+        list = undefined;
+        l = r;
+      } else {
+        list.children.push(right.content as IListItem);
       }
-      merged[merged.length - 1].content.push(...curr.content);
-    } else {
-      merged.push(curr);
+      r++;
+      continue;
     }
+
+    if (
+      right !== undefined &&
+      left !== undefined &&
+      left.type !== right.type &&
+      !isListItem(left) &&
+      isListItem(right)
+    ) {
+      list = {
+        children: [right.content as IListItem],
+      };
+      listType = right.type.slice(0, -5) as "numbered_list" | "bulleted_list";
+      r++;
+      merged.push(left as IBlock);
+      continue;
+    }
+    merged.push(left as IBlock);
+    l++;
+    r++;
   }
 
   return merged;
-};
-
-const mapRichText = (
-  richText: RichTextItemResponse[],
-  language?: string
-): IText[] => {
-  return richText.map(text => {
-    return {
-      plainText: text.plain_text,
-      href: text.href ?? undefined,
-      annotations: {
-        ...text.annotations,
-        color: text.annotations.color as string,
-        language,
-      },
-    };
-  });
-};
-
-export const readBlockContent = (
-  blocks: (PartialBlockObjectResponse | BlockObjectResponse)[]
-): IContent[] | undefined => {
-  const result = blocks
-    .map(block => {
-      if (!isFullBlock(block)) {
-        return undefined;
-      }
-
-      const { type } = block;
-
-      switch (type) {
-        case "image":
-          const image = block[type] as any;
-          let url: string = "";
-          if (image.type === "external") {
-            url = image.external.url;
-          } else if (image.type === "file") {
-            url = image.file.url;
-          }
-          const caption =
-            block[type].caption.length > 0
-              ? block[type].caption[0].plain_text
-              : "";
-          return {
-            type: type as string,
-            content: [
-              {
-                url,
-                caption,
-              },
-            ],
-          };
-        case "heading_1":
-          return {
-            type: type as string,
-            content: mapRichText(block.heading_1.rich_text),
-          };
-        case "heading_2":
-          return {
-            type: type as string,
-            content: mapRichText(block.heading_2.rich_text),
-          };
-        case "heading_3":
-          return {
-            type: type as string,
-            content: mapRichText(block.heading_3.rich_text),
-          };
-        case "paragraph":
-          return {
-            type: type as string,
-            content: mapRichText(block.paragraph.rich_text),
-          };
-        case "code":
-          return {
-            type: type as string,
-            content: mapRichText(block.code.rich_text, block.code.language),
-          };
-        case "bulleted_list_item":
-          return {
-            type: type as string,
-            content: mapRichText(block.bulleted_list_item.rich_text),
-          };
-        case "numbered_list_item":
-          return {
-            type: type as string,
-            content: mapRichText(block.numbered_list_item.rich_text),
-          };
-        default:
-          return undefined;
-      }
-    })
-    .filter(block => {
-      if (!block) {
-        return false;
-      } else if (block.content.length === 0) {
-        return false;
-      }
-
-      return true;
-    });
-
-  if (isContentArray(result)) return mergeListItems(result);
 };

@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { Field, Int, ObjectType } from "type-graphql";
-import { Text, RichText } from "./Global";
+import { RichText } from "./Global";
 import {
   IExperience,
   IRichText,

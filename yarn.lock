@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@ammarahmedca/types@^0.0.9":
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/@ammarahmedca/types/-/types-0.0.9.tgz#001c3e8c5bae2629406d59424a844d422b59def9"
-  integrity sha512-dkYGeAC83dXqD04FF4p2BeNeh8FUalB8Hr3dO/Pl998584wVLZXMiM3qu48SVri3WTcZVPSS2kbWzrz5RnyDgQ==
+"@ammarahmedca/types@^0.0.12":
+  version "0.0.12"
+  resolved "https://registry.yarnpkg.com/@ammarahmedca/types/-/types-0.0.12.tgz#08817ba4b7e38dde59ed1df11a4a8d29de0d9d1d"
+  integrity sha512-rOD+TS0iezM3UkHajSMpXxRM27vBbsBJkRJa2dc0ZmCy3znURWY3kK7dpP7ZSCKClr61kSPLDDD2UentAqWHKQ==
   dependencies:
     "@notionhq/client" "^2.2.3"
     asynckit "^0.4.0"
