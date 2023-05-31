@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "license": "MIT",
   "dependencies": {
-    "@ammarahmedca/types": "^0.0.12",
+    "@ammarahmedca/types": "^0.0.13",
     "@apollo/server": "^4.1.1",
     "@graphql-tools/schema": "^9.0.9",
     "@notionhq/client": "^2.2.2",

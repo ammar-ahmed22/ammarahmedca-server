@@ -27,6 +27,7 @@ export const mapRichText = (
     plainText: item.plain_text,
     annotations: { ...item.annotations, language },
     href: item.href ?? undefined,
+    inlineLatex: item.type === "equation"
   };
 };
 
