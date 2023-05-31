@@ -20,9 +20,9 @@ import {
 } from "@ammarahmedca/types";
 import {
   extractPropertyValue,
-  mapRichText,
   getAllListChildren,
   mergeListItems,
+  mapRichText
 } from "../../utils/notion";
 import { PostMetadata, Post } from "../typeDefs/Blog";
 
