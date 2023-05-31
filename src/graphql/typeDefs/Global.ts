@@ -41,6 +41,9 @@ export class RichText implements IRichText {
 
   @Field(type => Annotations, { description: "Rich text annotations." })
   annotations: Annotations;
+
+  @Field({ description: "Inline Latex boolean", nullable: true })
+  inlineLatex?: boolean;
 }
 
 @ObjectType({ description: "Object containing image properties." })
