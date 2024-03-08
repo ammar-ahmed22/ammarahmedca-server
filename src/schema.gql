@@ -4,57 +4,34 @@
 # -----------------------------------------------
 
 type Query {
-  blogMetadata(
-    tags: [String!]
-    category: String
-    onlyPublished: Boolean
-  ): [PostMetadata!]!
+  blogMetadata(tags: [String!], category: String, onlyPublished: Boolean): [PostMetadata!]!
   postBySlug(slug: String!): Post!
   blogCategories: [String!]!
   blogTags: [String!]!
 
-  """
-  Gets all experiences.
-  """
+  """Gets all experiences."""
   experiences: [Experience!]!
 
-  """
-  Gets all skill values with optional filtering by type.
-  """
+  """Gets all skill values with optional filtering by type."""
   skills(onlyType: String): [Skill!]!
 
-  """
-  Gets all types for skills.
-  """
+  """Gets all types for skills."""
   skillTypes: [String!]!
-  projectMetadata(
-    type: [String!]
-    frameworks: [String!]
-    languages: [String!]
-    onlyPublished: Boolean
-  ): [ProjectMetadata!]!
+  projectMetadata(type: [String!], frameworks: [String!], languages: [String!], onlyPublished: Boolean): [ProjectMetadata!]!
   projectFrameworks: [String!]!
   projectTypes: [String!]!
   projectLanguages: [String!]!
 
-  """
-  Gets user. (Authorized)
-  """
+  """Gets user. (Authorized)"""
   user: User!
 
-  """
-  Gets any user by id. (Authorized)
-  """
+  """Gets any user by id. (Authorized)"""
   getUserByID(userId: String!): User!
 
-  """
-  Gets game. (Authorized)
-  """
+  """Gets game. (Authorized)"""
   game(gameID: String!): Game!
 
-  """
-  Gets all games for user. (Authorized)
-  """
+  """Gets all games for user. (Authorized)"""
   games: [Game!]!
 }
 
@@ -70,64 +47,40 @@ type PostMetadata {
 }
 
 type RichText {
-  """
-  Text content for rich text.
-  """
+  """Text content for rich text."""
   plainText: String!
 
-  """
-  HREF for link text.
-  """
+  """HREF for link text."""
   href: String
 
-  """
-  Rich text annotations.
-  """
+  """Rich text annotations."""
   annotations: Annotations!
 
-  """
-  Inline Latex boolean
-  """
+  """Inline Latex boolean"""
   inlineLatex: Boolean
 }
 
-"""
-Object containing properties for rich text.
-"""
+"""Object containing properties for rich text."""
 type Annotations {
-  """
-  Bold text.
-  """
+  """Bold text."""
   bold: Boolean!
 
-  """
-  Underlined text.
-  """
+  """Underlined text."""
   underline: Boolean!
 
-  """
-  Text with a line through it.
-  """
+  """Text with a line through it."""
   strikethrough: Boolean!
 
-  """
-  Inline code text.
-  """
+  """Inline code text."""
   code: Boolean!
 
-  """
-  Italicized text.
-  """
+  """Italicized text."""
   italic: Boolean!
 
-  """
-  Colored text.
-  """
+  """Colored text."""
   color: String!
 
-  """
-  Name of language for code block.
-  """
+  """Name of language for code block."""
   language: String
 }
 
@@ -141,31 +94,21 @@ type Post {
   content: [Block!]!
 }
 
-"""
-Block content for posts
-"""
+"""Block content for posts"""
 type Block {
   type: String!
   content: [BlockContent!]!
 }
 
-"""
-Union type for block content
-"""
+"""Union type for block content"""
 union BlockContent = Image | List | RichText | Equation
 
-"""
-Object containing image properties.
-"""
+"""Object containing image properties."""
 type Image {
-  """
-  Image url.
-  """
+  """Image url."""
   url: String!
 
-  """
-  Image caption.
-  """
+  """Image caption."""
   caption: [RichText!]!
 }
 
@@ -173,9 +116,7 @@ type List {
   children: [ListItem!]!
 }
 
-"""
-List item with unlimited depth of children
-"""
+"""List item with unlimited depth of children"""
 type ListItem {
   content: [RichText!]!
   children: [ListItem!]
@@ -185,79 +126,49 @@ type Equation {
   expression: String!
 }
 
-"""
-Experience information.
-"""
+"""Experience information."""
 type Experience {
-  """
-  Company experience is for.
-  """
+  """Company experience is for."""
   company: String!
 
-  """
-  Role at company.
-  """
+  """Role at company."""
   role: String!
 
-  """
-  Description of experience.
-  """
+  """Description of experience."""
   description: [RichText!]!
 
-  """
-  Type/Field of experience.
-  """
+  """Type/Field of experience."""
   type: String!
 
-  """
-  Skills learned/employed at experience.
-  """
+  """Skills learned/employed at experience."""
   skills: [String!]!
 
-  """
-  Duration of experience.
-  """
+  """Duration of experience."""
   timeframe: Timeframe!
 }
 
-"""
-Duration of experience (null end means currently active)
-"""
+"""Duration of experience (null end means currently active)"""
 type Timeframe {
-  """
-  Start of experience.
-  """
+  """Start of experience."""
   start: Timestamp!
 
-  """
-  End of experience.
-  """
+  """End of experience."""
   end: Timestamp
 }
 
-"""
-Skill information.
-"""
+"""Skill information."""
 type Skill {
-  """
-  Name of skill.
-  """
+  """Name of skill."""
   name: String!
 
-  """
-  Type categorization of skill.
-  """
+  """Type categorization of skill."""
   type: String!
 
-  """
-  Competency in skill out of 100.
-  """
+  """Competency in skill out of 100."""
   value: Int!
 }
 
-"""
-Metadata for project posts
-"""
+"""Metadata for project posts"""
 type ProjectMetadata {
   id: String!
   name: String!
@@ -270,73 +181,45 @@ type ProjectMetadata {
   github: String
 }
 
-"""
-User for chess games
-"""
+"""User for chess games"""
 type User {
-  """
-  MongoDB id for user.
-  """
+  """MongoDB id for user."""
   _id: ID!
 
-  """
-  Date user was created at.
-  """
+  """Date user was created at."""
   createdAt: Timestamp!
 
-  """
-  Email address for user.
-  """
+  """Email address for user."""
   email: String!
 
-  """
-  User's first name.
-  """
+  """User's first name."""
   firstName: String!
 
-  """
-  User's last name.
-  """
+  """User's last name."""
   lastName: String!
 
-  """
-  User's middle name.
-  """
+  """User's middle name."""
   middleName: String
 
-  """
-  Company the user works for.
-  """
+  """Company the user works for."""
   company: String
 
-  """
-  Position the user is in at company.
-  """
+  """Position the user is in at company."""
   position: String
 
-  """
-  Where the user found the website.
-  """
+  """Where the user found the website."""
   foundBy: String
 
-  """
-  String representation of profile image.
-  """
+  """String representation of profile image."""
   profilePic: String
 
-  """
-  Games record for user.s
-  """
+  """Games record for user.s"""
   record: Record!
 
-  """
-  ID's for games user has played or is playing.
-  """
+  """ID's for games user has played or is playing."""
   gameIDs: [String!]!
 
-  """
-  Whether or not the user's email has been confirmed.
-  """
+  """Whether or not the user's email has been confirmed."""
   emailConfirmed: Boolean!
 }
 
@@ -345,250 +228,154 @@ type Record {
   losses: Int!
 }
 
-"""
-Data for the game.
-"""
+"""Data for the game."""
 type Game {
-  """
-  MongoDB id for game.
-  """
+  """MongoDB id for game."""
   _id: ID!
 
-  """
-  Date game was created at.
-  """
+  """Date game was created at."""
   createdAt: Timestamp!
 
-  """
-  Array of moves for the game.
-  """
+  """Array of moves for the game."""
   moves: [Move!]!
 
-  """
-  MongoDB id's for the users playing the game.
-  """
+  """MongoDB id's for the users playing the game."""
   playerIDs: Players!
 
-  """
-  The latest half move.
-  """
+  """The latest half move."""
   lastHalfMove: HalfMove
 
-  """
-  Color to move after the latest move.
-  """
+  """Color to move after the latest move."""
   colorToMove: String!
 
-  """
-  Status of the game (active, complete)
-  """
+  """Status of the game (active, complete)"""
   status: String!
 }
 
-"""
-Data for a given move.
-"""
+"""Data for a given move."""
 type Move {
-  """
-  White player's half move
-  """
+  """White player's half move"""
   white: HalfMove!
 
-  """
-  Black player's half move
-  """
+  """Black player's half move"""
   black: HalfMove
 }
 
-"""
-Data for a given half move.
-"""
+"""Data for a given half move."""
 type HalfMove {
-  """
-  FEN string for board state after the move was made.
-  """
+  """FEN string for board state after the move was made."""
   fen: String!
 
-  """
-  Board options for after the move was made.
-  """
+  """Board options for after the move was made."""
   boardOpts: BoardOpts
 
-  """
-  White and black taken pieces after move was made.
-  """
+  """White and black taken pieces after move was made."""
   takes: Takes!
 
-  """
-  Data for the move that was executed.
-  """
+  """Data for the move that was executed."""
   executedMove: ExecutedMove!
 }
 
-"""
-Options for given move in chess game.
-"""
+"""Options for given move in chess game."""
 type BoardOpts {
-  """
-  FEN string section for castling ability
-  """
+  """FEN string section for castling ability"""
   castling: String
 
-  """
-  Squares in which en passant is possible.
-  """
+  """Squares in which en passant is possible."""
   enPassant: String
 
-  """
-  Half move count.
-  """
+  """Half move count."""
   halfMove: Int
 
-  """
-  Full move count.
-  """
+  """Full move count."""
   fullMove: Int
 }
 
-"""
-Object containing taken pieces.
-"""
+"""Object containing taken pieces."""
 type Takes {
-  """
-  Array of white pieces taken by black.
-  """
+  """Array of white pieces taken by black."""
   white: [String!]!
 
-  """
-  Array of black pieces taken by white.
-  """
+  """Array of black pieces taken by white."""
   black: [String!]!
 }
 
-"""
-Data for chess move that was played.
-"""
+"""Data for chess move that was played."""
 type ExecutedMove {
-  """
-  Square that piece was moved from.
-  """
+  """Square that piece was moved from."""
   from: Algebraic!
 
-  """
-  Square that piece was moved to.
-  """
+  """Square that piece was moved to."""
   to: Algebraic!
 
-  """
-  Name of the piece that was moved.
-  """
+  """Name of the piece that was moved."""
   pieceType: String!
 
-  """
-  Was check caused by this move.
-  """
+  """Was check caused by this move."""
   causedCheck: Boolean
 }
 
-"""
-Algebraic notation for chess square.
-"""
+"""Algebraic notation for chess square."""
 type Algebraic {
-  """
-  Rank (row, 1-8) number for chess square.
-  """
+  """Rank (row, 1-8) number for chess square."""
   rank: Int!
 
-  """
-  File (column, A-H) letter for chess square.
-  """
+  """File (column, A-H) letter for chess square."""
   file: String!
 }
 
-"""
-Object containing ID's for white and black chess players.
-"""
+"""Object containing ID's for white and black chess players."""
 type Players {
   white: String!
   black: String!
 }
 
 type Mutation {
-  """
-  Register for ammarahmed.ca
-  """
+  """Register for ammarahmed.ca"""
   register(data: RegisterInput!): AuthPayload!
 
-  """
-  Create and send a new email confirmation code. (Authorized)
-  """
+  """Create and send a new email confirmation code. (Authorized)"""
   newEmailCode: AuthPayload!
 
-  """
-  Verify email with confirmation code. (Authorized)
-  """
+  """Verify email with confirmation code. (Authorized)"""
   confirmEmail(code: Int!): AuthPayload!
 
-  """
-  Login to ammarahmed.ca
-  """
+  """Login to ammarahmed.ca"""
   login(password: String!, email: String!): AuthPayload!
 
-  """
-  Send forgot password email
-  """
+  """Send forgot password email"""
   forgotPassword(email: String!): String!
 
-  """
-  Reset password with encrypted token.
-  """
+  """Reset password with encrypted token."""
   resetPassword(token: String!, newPassword: String!): String!
 
-  """
-  Updates user fields. (Authorized)
-  """
+  """Updates user fields. (Authorized)"""
   updateUser(data: UpdateInput!): AuthPayload!
 
-  """
-  Creates new game. (Authorized)
-  """
+  """Creates new game. (Authorized)"""
   createGame: CreateGameResponse!
 
-  """
-  Adds move to game. (Authorized)
-  """
+  """Adds move to game. (Authorized)"""
   addMove(
-    """
-    FEN string for chess game after move is made.
-    """
+    """FEN string for chess game after move is made."""
     fen: String!
     executedMove: ExecutedMoveInput!
     boardOpts: BoardOptsInput
 
-    """
-    Array of white pieces taken by black after move is made.
-    """
+    """Array of white pieces taken by black after move is made."""
     whiteTakes: [String!]!
 
-    """
-    Array of black pieces taken by white after move is made.
-    """
+    """Array of black pieces taken by white after move is made."""
     blackTakes: [String!]!
 
-    """
-    Game ID for game to add move to.
-    """
+    """Game ID for game to add move to."""
     gameID: String!
   ): AuthPayload!
 }
 
-"""
-Authorized mutations response.
-"""
+"""Authorized mutations response."""
 type AuthPayload {
-  """
-  JWT (json web token)
-  """
+  """JWT (json web token)"""
   token: String!
 }
 
@@ -612,16 +399,12 @@ input UpdateInput {
   position: String
 }
 
-"""
-Game ID sent when new game created.
-"""
+"""Game ID sent when new game created."""
 type CreateGameResponse {
   gameID: String!
 }
 
-"""
-Input type for move that was executed.
-"""
+"""Input type for move that was executed."""
 input ExecutedMoveInput {
   from: AlgebraicInput!
   to: AlgebraicInput!
@@ -629,17 +412,13 @@ input ExecutedMoveInput {
   causedCheck: Boolean
 }
 
-"""
-Input type for algebraic notation.
-"""
+"""Input type for algebraic notation."""
 input AlgebraicInput {
   rank: Int!
   file: String!
 }
 
-"""
-Input type for chess game options.
-"""
+"""Input type for chess game options."""
 input BoardOptsInput {
   castling: String
   enPassant: String
