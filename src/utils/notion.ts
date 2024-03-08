@@ -63,8 +63,13 @@ export const extractPropertyValue = (
   if (property.type === "date" && property.date) {
     const ymd = (str: string): Date => {
       const [year, month, day] = str.split("-").map(c => parseInt(c));
-      console.log("ymd being called:", year, month, day);
-      return new Date(year, month - 1, day);
+      let date = new Date(year, month - 1, day);
+      if (process.env.NODE_ENV !== "production") {
+        // in prod, time is in UTC, subtract offset
+        const offset = new Date().getTimezoneOffset() * 60 * 1000;
+        date.setTime(date.getTime() - offset)
+      }
+      return date;
     };
     return {
       start: ymd(property.date.start),
