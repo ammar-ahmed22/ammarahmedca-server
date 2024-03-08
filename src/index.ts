@@ -135,6 +135,6 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
   );
 
   app.listen(PORT, () =>
-    console.log(`🚀 Server ready at http://localhost:${PORT}`)
+    console.log(`🚀 Server listening at http://localhost:${PORT}`)
   );
 })();
