@@ -63,6 +63,7 @@ export const extractPropertyValue = (
   if (property.type === "date" && property.date) {
     const ymd = (str: string): Date => {
       const [year, month, day] = str.split("-").map(c => parseInt(c));
+      console.log("ymd being called:", year, month, day);
       return new Date(year, month - 1, day);
     };
     return {
