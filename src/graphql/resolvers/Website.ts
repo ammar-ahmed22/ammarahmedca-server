@@ -193,7 +193,7 @@ export class WebsiteResolver {
       database_id: this.projects_db_id,
       filter: hasFilters ? filters : undefined,
     });
-
+    console.log("QUERY: projectMetadata");
     return resp.results.map(page => {
       return this.createProjectMetadata(page as PageObjectResponse);
     });
