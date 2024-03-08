@@ -22,7 +22,7 @@ import {
   extractPropertyValue,
   getAllListChildren,
   mergeListItems,
-  mapRichText
+  mapRichText,
 } from "../../utils/notion";
 import { PostMetadata, Post } from "../typeDefs/Blog";
 

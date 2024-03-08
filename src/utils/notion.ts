@@ -27,7 +27,7 @@ export const mapRichText = (
     plainText: item.plain_text,
     annotations: { ...item.annotations, language },
     href: item.href ?? undefined,
-    inlineLatex: item.type === "equation"
+    inlineLatex: item.type === "equation",
   };
 };
 
@@ -64,7 +64,7 @@ export const extractPropertyValue = (
     const ymd = (str: string): Date => {
       const [year, month, day] = str.split("-").map(c => parseInt(c));
       return new Date(year, month - 1, day);
-    }
+    };
     return {
       start: ymd(property.date.start),
       end: property.date.end ? ymd(property.date.end) : undefined,
