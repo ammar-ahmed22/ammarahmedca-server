@@ -28,6 +28,7 @@ import { GameResolver } from "./graphql/resolvers/Game";
 import UserModel from "./models/User";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
 
 (async () => {
   const schema = await buildSchema({
@@ -39,7 +40,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
       sortedSchema: false,
     },
   });
-
+  if (EMIT_SCHEMA) return;
   const app = express();
 
   const server = new ApolloServer<Context>({

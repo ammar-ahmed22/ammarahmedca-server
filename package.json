@@ -51,11 +51,12 @@
     "start:dev": "nodemon --watch './**/*.ts' --exec ts-node ./src/index.ts",
     "test": "jest",
     "clean": "rimraf dist/",
-    "copy-files": "copyfiles -u 1 src/**/*.json src/**/*.graphql src/**/*.html dist/",
+    "copy-files": "copyfiles -u 1 src/**/*.json src/**/*.html dist/",
     "build": "yarn clean && yarn copy-files && tsc",
     "start": "node ./dist/index.js",
     "build:start": "yarn build && yarn start",
     "publish-schema": "rover graph publish ammarahmedca-api-v2@production --schema ./src/schema.gql",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "emit-schema": "EMIT_SCHEMA=true node ./dist/index.js"
   }
 }
