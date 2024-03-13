@@ -4,58 +4,94 @@
 # -----------------------------------------------
 
 type Query {
-  """Gets user. (Authorized)"""
+  """
+  Gets user. (Authorized)
+  """
   user: User!
 
-  """Gets any user by id. (Authorized)"""
+  """
+  Gets any user by id. (Authorized)
+  """
   getUserByID(userId: String!): User!
 
-  """Gets game. (Authorized)"""
+  """
+  Gets game. (Authorized)
+  """
   game(gameID: String!): Game!
 
-  """Gets all games for user. (Authorized)"""
+  """
+  Gets all games for user. (Authorized)
+  """
   games: [Game!]!
 }
 
-"""User for chess games"""
+"""
+User for chess games
+"""
 type User {
-  """MongoDB id for user."""
+  """
+  MongoDB id for user.
+  """
   _id: ID!
 
-  """Date user was created at."""
+  """
+  Date user was created at.
+  """
   createdAt: Timestamp!
 
-  """Email address for user."""
+  """
+  Email address for user.
+  """
   email: String!
 
-  """User's first name."""
+  """
+  User's first name.
+  """
   firstName: String!
 
-  """User's last name."""
+  """
+  User's last name.
+  """
   lastName: String!
 
-  """User's middle name."""
+  """
+  User's middle name.
+  """
   middleName: String
 
-  """Company the user works for."""
+  """
+  Company the user works for.
+  """
   company: String
 
-  """Position the user is in at company."""
+  """
+  Position the user is in at company.
+  """
   position: String
 
-  """Where the user found the website."""
+  """
+  Where the user found the website.
+  """
   foundBy: String
 
-  """String representation of profile image."""
+  """
+  String representation of profile image.
+  """
   profilePic: String
 
-  """Games record for user.s"""
+  """
+  Games record for user.s
+  """
   record: Record!
 
-  """ID's for games user has played or is playing."""
+  """
+  ID's for games user has played or is playing.
+  """
   gameIDs: [String!]!
 
-  """Whether or not the user's email has been confirmed."""
+  """
+  Whether or not the user's email has been confirmed.
+  """
   emailConfirmed: Boolean!
 }
 
@@ -69,27 +105,43 @@ type Record {
   losses: Int!
 }
 
-"""Data for the game."""
+"""
+Data for the game.
+"""
 type Game {
-  """MongoDB id for game."""
+  """
+  MongoDB id for game.
+  """
   _id: ID!
 
-  """Date game was created at."""
+  """
+  Date game was created at.
+  """
   createdAt: Timestamp!
 
-  """Array of full moves for the game."""
+  """
+  Array of full moves for the game.
+  """
   history: [FullMove!]!
 
-  """MongoDB id's for the users playing the game."""
+  """
+  MongoDB id's for the users playing the game.
+  """
   playerIDs: Players!
 
-  """The latest half move."""
+  """
+  The latest half move.
+  """
   lastHalfMove: CompleteHalfMove
 
-  """Color to move after the latest move."""
+  """
+  Color to move after the latest move.
+  """
   colorToMove: String!
 
-  """Status of the game (active, complete)"""
+  """
+  Status of the game (active, complete)
+  """
   status: String!
 }
 
@@ -101,19 +153,25 @@ type FullMove {
   black: CompleteHalfMove!
 }
 
-"""Object containing the state and the move played in the half move."""
+"""
+Object containing the state and the move played in the half move.
+"""
 type CompleteHalfMove {
   state: HalfMoveState!
   move: HalfMove!
 }
 
-"""Object containing the state of the played half move."""
+"""
+Object containing the state of the played half move.
+"""
 type HalfMoveState {
   fen: String!
   gameState: GameState!
 }
 
-"""Object containing the state of teh game."""
+"""
+Object containing the state of teh game.
+"""
 type GameState {
   colorToMove: String!
   enPassant: String
@@ -121,19 +179,25 @@ type GameState {
   inCheck: Boolean!
 }
 
-"""Object containing the castling ability for the game."""
+"""
+Object containing the castling ability for the game.
+"""
 type CastlingAbility {
   white: ColorCastlingAbility!
   black: ColorCastlingAbility!
 }
 
-"""Object containing the castling ability for one side."""
+"""
+Object containing the castling ability for one side.
+"""
 type ColorCastlingAbility {
   king: Boolean
   queen: Boolean
 }
 
-"""Object containing the move played."""
+"""
+Object containing the move played.
+"""
 type HalfMove {
   from: String!
   to: String!
@@ -146,44 +210,68 @@ type HalfMove {
   promotion: String
 }
 
-"""Object containing ID's for white and black chess players."""
+"""
+Object containing ID's for white and black chess players.
+"""
 type Players {
   white: String!
   black: String!
 }
 
 type Mutation {
-  """Register for ammarahmed.ca"""
+  """
+  Register for ammarahmed.ca
+  """
   register(data: RegisterInput!): AuthPayload!
 
-  """Create and send a new email confirmation code. (Authorized)"""
+  """
+  Create and send a new email confirmation code. (Authorized)
+  """
   newEmailCode: AuthPayload!
 
-  """Verify email with confirmation code. (Authorized)"""
+  """
+  Verify email with confirmation code. (Authorized)
+  """
   confirmEmail(code: Int!): AuthPayload!
 
-  """Login to ammarahmed.ca"""
+  """
+  Login to ammarahmed.ca
+  """
   login(password: String!, email: String!): AuthPayload!
 
-  """Send forgot password email"""
+  """
+  Send forgot password email
+  """
   forgotPassword(email: String!): String!
 
-  """Reset password with encrypted token."""
+  """
+  Reset password with encrypted token.
+  """
   resetPassword(token: String!, newPassword: String!): String!
 
-  """Updates user fields. (Authorized)"""
+  """
+  Updates user fields. (Authorized)
+  """
   updateUser(data: UpdateInput!): AuthPayload!
 
-  """Creates new game. (Authorized)"""
+  """
+  Creates new game. (Authorized)
+  """
   createGame: CreateGameResponse!
 
-  """Adds move to game. (Authorized)"""
+  """
+  Adds move to game. (Authorized)
+  """
   addMove(executedMove: HalfMoveInput!, gameID: String!): AuthPayload!
 }
 
-"""Authorized mutations response."""
+"""
+Authorized mutations response.
+"""
 type AuthPayload {
-  """JWT (json web token)"""
+  """
+  JWT (json web token)
+  """
   token: String!
 }
 
@@ -207,12 +295,16 @@ input UpdateInput {
   position: String
 }
 
-"""Game ID sent when new game created."""
+"""
+Game ID sent when new game created.
+"""
 type CreateGameResponse {
   gameID: String!
 }
 
-"""Input type for move that is executed"""
+"""
+Input type for move that is executed
+"""
 input HalfMoveInput {
   from: String!
   to: String!

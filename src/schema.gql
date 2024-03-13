@@ -4,20 +4,35 @@
 # -----------------------------------------------
 
 type Query {
-  blogMetadata(tags: [String!], category: String, onlyPublished: Boolean): [PostMetadata!]!
+  blogMetadata(
+    tags: [String!]
+    category: String
+    onlyPublished: Boolean
+  ): [PostMetadata!]!
   postBySlug(slug: String!): Post!
   blogCategories: [String!]!
   blogTags: [String!]!
 
-  """Gets all experiences."""
+  """
+  Gets all experiences.
+  """
   experiences: [Experience!]!
 
-  """Gets all skill values with optional filtering by type."""
+  """
+  Gets all skill values with optional filtering by type.
+  """
   skills(onlyType: String): [Skill!]!
 
-  """Gets all types for skills."""
+  """
+  Gets all types for skills.
+  """
   skillTypes: [String!]!
-  projectMetadata(type: [String!], frameworks: [String!], languages: [String!], onlyPublished: Boolean): [ProjectMetadata!]!
+  projectMetadata(
+    type: [String!]
+    frameworks: [String!]
+    languages: [String!]
+    onlyPublished: Boolean
+  ): [ProjectMetadata!]!
   projectFrameworks: [String!]!
   projectTypes: [String!]!
   projectLanguages: [String!]!
@@ -35,40 +50,64 @@ type PostMetadata {
 }
 
 type RichText {
-  """Text content for rich text."""
+  """
+  Text content for rich text.
+  """
   plainText: String!
 
-  """HREF for link text."""
+  """
+  HREF for link text.
+  """
   href: String
 
-  """Rich text annotations."""
+  """
+  Rich text annotations.
+  """
   annotations: Annotations!
 
-  """Inline Latex boolean"""
+  """
+  Inline Latex boolean
+  """
   inlineLatex: Boolean
 }
 
-"""Object containing properties for rich text."""
+"""
+Object containing properties for rich text.
+"""
 type Annotations {
-  """Bold text."""
+  """
+  Bold text.
+  """
   bold: Boolean!
 
-  """Underlined text."""
+  """
+  Underlined text.
+  """
   underline: Boolean!
 
-  """Text with a line through it."""
+  """
+  Text with a line through it.
+  """
   strikethrough: Boolean!
 
-  """Inline code text."""
+  """
+  Inline code text.
+  """
   code: Boolean!
 
-  """Italicized text."""
+  """
+  Italicized text.
+  """
   italic: Boolean!
 
-  """Colored text."""
+  """
+  Colored text.
+  """
   color: String!
 
-  """Name of language for code block."""
+  """
+  Name of language for code block.
+  """
   language: String
 }
 
@@ -82,21 +121,31 @@ type Post {
   content: [Block!]!
 }
 
-"""Block content for posts"""
+"""
+Block content for posts
+"""
 type Block {
   type: String!
   content: [BlockContent!]!
 }
 
-"""Union type for block content"""
+"""
+Union type for block content
+"""
 union BlockContent = Image | List | RichText | Equation
 
-"""Object containing image properties."""
+"""
+Object containing image properties.
+"""
 type Image {
-  """Image url."""
+  """
+  Image url.
+  """
   url: String!
 
-  """Image caption."""
+  """
+  Image caption.
+  """
   caption: [RichText!]!
 }
 
@@ -104,7 +153,9 @@ type List {
   children: [ListItem!]!
 }
 
-"""List item with unlimited depth of children"""
+"""
+List item with unlimited depth of children
+"""
 type ListItem {
   content: [RichText!]!
   children: [ListItem!]
@@ -114,49 +165,79 @@ type Equation {
   expression: String!
 }
 
-"""Experience information."""
+"""
+Experience information.
+"""
 type Experience {
-  """Company experience is for."""
+  """
+  Company experience is for.
+  """
   company: String!
 
-  """Role at company."""
+  """
+  Role at company.
+  """
   role: String!
 
-  """Description of experience."""
+  """
+  Description of experience.
+  """
   description: [RichText!]!
 
-  """Type/Field of experience."""
+  """
+  Type/Field of experience.
+  """
   type: String!
 
-  """Skills learned/employed at experience."""
+  """
+  Skills learned/employed at experience.
+  """
   skills: [String!]!
 
-  """Duration of experience."""
+  """
+  Duration of experience.
+  """
   timeframe: Timeframe!
 }
 
-"""Duration of experience (null end means currently active)"""
+"""
+Duration of experience (null end means currently active)
+"""
 type Timeframe {
-  """Start of experience."""
+  """
+  Start of experience.
+  """
   start: Timestamp!
 
-  """End of experience."""
+  """
+  End of experience.
+  """
   end: Timestamp
 }
 
-"""Skill information."""
+"""
+Skill information.
+"""
 type Skill {
-  """Name of skill."""
+  """
+  Name of skill.
+  """
   name: String!
 
-  """Type categorization of skill."""
+  """
+  Type categorization of skill.
+  """
   type: String!
 
-  """Competency in skill out of 100."""
+  """
+  Competency in skill out of 100.
+  """
   value: Int!
 }
 
-"""Metadata for project posts"""
+"""
+Metadata for project posts
+"""
 type ProjectMetadata {
   id: String!
   name: String!

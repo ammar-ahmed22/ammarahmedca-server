@@ -14,11 +14,7 @@ import {
   ObjectType,
 } from "type-graphql";
 import { AuthPayload } from "../../utils/auth";
-import GameModel, {
-  Game,
-  HalfMove,
-  HalfMoveInput
-} from "../../models/Game";
+import GameModel, { Game, HalfMove, HalfMoveInput } from "../../models/Game";
 import UserModel from "../../models/User";
 import transporter, {
   readHTML,
@@ -30,7 +26,7 @@ import { Chess } from "@ammar-ahmed22/chess-engine";
 
 @ArgsType()
 class AddMoveArgs {
-  @Field(returns => HalfMoveInput, { description: "The executed move."})
+  @Field(returns => HalfMoveInput, { description: "The executed move." })
   public executedMove: HalfMoveInput;
 
   @Field({ description: "Game ID for game to add move to." })
@@ -150,7 +146,8 @@ export class GameResolver {
   async addMove(
     @Ctx() ctx: Context,
     @Arg("gameID") gameID: string,
-    @Arg("executedMove", type => HalfMoveInput, { validate: true }) executedMove: HalfMoveInput
+    @Arg("executedMove", type => HalfMoveInput, { validate: true })
+    executedMove: HalfMoveInput
   ) {
     const user = await UserModel.findById(ctx.userId);
 
@@ -178,10 +175,16 @@ export class GameResolver {
       }
     }
 
-    const result = chess.execute(executedMove, { validate: true, silent: true });
-    if (!result) throw new Error("Move is invalid!")
+    const result = chess.execute(executedMove, {
+      validate: true,
+      silent: true,
+    });
+    if (!result) throw new Error("Move is invalid!");
 
-    await GameModel.updateOne({ _id: gameID }, { $set: { history: chess.history(), colorToMove: chess.colorToMove() }});
+    await GameModel.updateOne(
+      { _id: gameID },
+      { $set: { history: chess.history(), colorToMove: chess.colorToMove() } }
+    );
 
     const emailParams: SendMovePlayerEmailOpts = {
       email: opponent.email,

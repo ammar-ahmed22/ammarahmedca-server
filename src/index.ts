@@ -37,9 +37,9 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
     authChecker,
     emitSchemaFile: {
       path: __dirname + "/game.gql",
-      sortedSchema: false
+      sortedSchema: false,
     },
-    validate: true
+    validate: true,
   });
 
   const schema = await buildSchema({
@@ -50,10 +50,8 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
       path: __dirname + "/schema.gql",
       sortedSchema: false,
     },
-    validate: true
+    validate: true,
   });
-
-  
 
   if (EMIT_SCHEMA) return;
   const app = express();
@@ -85,7 +83,7 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
       }
       return formattedError;
     },
-  })
+  });
 
   const server = new ApolloServer({
     schema,
@@ -161,7 +159,7 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
         };
       },
     })
-  )
+  );
 
   app.use(
     "/",
