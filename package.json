@@ -5,6 +5,7 @@
   "main": "./dist/index.js",
   "license": "MIT",
   "dependencies": {
+    "@ammar-ahmed22/chess-engine": "^0.4.1",
     "@ammarahmedca/types": "^0.0.13",
     "@apollo/server": "^4.1.1",
     "@graphql-tools/schema": "^9.0.9",
@@ -15,7 +16,7 @@
     "@types/nodemailer": "^6.4.6",
     "apollo-server-express": "^3.11.1",
     "bcryptjs": "^2.4.3",
-    "class-validator": "^0.13.2",
+    "class-validator": "^0.14.1",
     "copyfiles": "^2.4.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

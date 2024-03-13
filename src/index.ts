@@ -31,20 +31,35 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
 
 (async () => {
+  const gameSchema = await buildSchema({
+    resolvers: [UserResolver, GameResolver],
+    dateScalarMode: "timestamp",
+    authChecker,
+    emitSchemaFile: {
+      path: __dirname + "/game.gql",
+      sortedSchema: false
+    },
+    validate: true
+  });
+
   const schema = await buildSchema({
-    resolvers: [BlogResolver, WebsiteResolver, UserResolver, GameResolver],
+    resolvers: [BlogResolver, WebsiteResolver],
     dateScalarMode: "timestamp",
     authChecker,
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       sortedSchema: false,
     },
+    validate: true
   });
+
+  
+
   if (EMIT_SCHEMA) return;
   const app = express();
 
-  const server = new ApolloServer<Context>({
-    schema,
+  const gameServer = new ApolloServer<Context>({
+    schema: gameSchema,
     introspection: true,
     plugins: [
       process.env.NODE_ENV === "production"
@@ -70,6 +85,19 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
       }
       return formattedError;
     },
+  })
+
+  const server = new ApolloServer({
+    schema,
+    introspection: true,
+    plugins: [
+      process.env.NODE_ENV === "production"
+        ? ApolloServerPluginLandingPageProductionDefault({
+            graphRef: "ammarahmedca-api-v2@production",
+            footer: false,
+          })
+        : ApolloServerPluginLandingPageLocalDefault(),
+    ],
   });
 
   if (process.env.NODE_ENV !== "production") {
@@ -108,12 +136,13 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
   }
 
   await server.start();
+  await gameServer.start();
 
   app.use(
-    "/",
+    "/game",
     cors<cors.CorsRequest>(),
     express.json({ limit: "10mb" }),
-    expressMiddleware<Context>(server, {
+    expressMiddleware<Context>(gameServer, {
       context: async ({ req }) => {
         if (
           !req.headers.authorization ||
@@ -132,6 +161,13 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
         };
       },
     })
+  )
+
+  app.use(
+    "/",
+    cors<cors.CorsRequest>(),
+    express.json({ limit: "10mb" }),
+    expressMiddleware(server)
   );
 
   app.listen(PORT, () =>

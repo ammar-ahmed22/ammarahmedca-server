@@ -15,12 +15,9 @@ import {
 } from "type-graphql";
 import { AuthPayload } from "../../utils/auth";
 import GameModel, {
-  BoardOptsInput,
   Game,
-  ExecutedMoveInput,
-  Move,
   HalfMove,
-  Takes,
+  HalfMoveInput
 } from "../../models/Game";
 import UserModel from "../../models/User";
 import transporter, {
@@ -29,27 +26,12 @@ import transporter, {
   getParamNames,
 } from "../../utils/mail";
 import { Types } from "mongoose";
+import { Chess } from "@ammar-ahmed22/chess-engine";
 
 @ArgsType()
 class AddMoveArgs {
-  @Field({ description: "FEN string for chess game after move is made." })
-  public fen: string;
-
-  @Field(returns => ExecutedMoveInput)
-  executedMove: ExecutedMoveInput;
-
-  @Field({ nullable: true })
-  public boardOpts?: BoardOptsInput;
-
-  @Field(returns => [String], {
-    description: "Array of white pieces taken by black after move is made.",
-  })
-  public whiteTakes: string[];
-
-  @Field(returns => [String], {
-    description: "Array of black pieces taken by white after move is made.",
-  })
-  public blackTakes: string[];
+  @Field(returns => HalfMoveInput, { description: "The executed move."})
+  public executedMove: HalfMoveInput;
 
   @Field({ description: "Game ID for game to add move to." })
   public gameID: string;
@@ -118,17 +100,17 @@ export class GameResolver {
     return `${a.file}${a.rank}`;
   };
 
-  private getLastHalfMove = (moves: Move[]): HalfMove | undefined => {
-    const lastMove = moves.at(-1);
-    if (lastMove) {
-      if (lastMove.black) {
-        return lastMove.black;
-      }
+  // private getLastHalfMove = (moves: Move[]): HalfMove | undefined => {
+  //   const lastMove = moves.at(-1);
+  //   if (lastMove) {
+  //     if (lastMove.black) {
+  //       return lastMove.black;
+  //     }
 
-      return lastMove.white;
-    }
-    return undefined;
-  };
+  //     return lastMove.white;
+  //   }
+  //   return undefined;
+  // };
 
   @Authorized()
   @Mutation(returns => CreateGameResponse, {
@@ -167,15 +149,8 @@ export class GameResolver {
   })
   async addMove(
     @Ctx() ctx: Context,
-    @Args()
-    {
-      fen,
-      boardOpts,
-      whiteTakes,
-      blackTakes,
-      executedMove,
-      gameID,
-    }: AddMoveArgs
+    @Arg("gameID") gameID: string,
+    @Arg("executedMove", type => HalfMoveInput, { validate: true }) executedMove: HalfMoveInput
   ) {
     const user = await UserModel.findById(ctx.userId);
 
@@ -192,64 +167,30 @@ export class GameResolver {
     const opponent = await UserModel.findById(oppID);
 
     if (!opponent) throw new Error("Opponent not found.");
-
-    let takenPiece: string | undefined;
-    const lastHalfMove = this.getLastHalfMove(game.moves);
-    if (lastHalfMove) {
-      if (
-        game.colorToMove === "w" &&
-        lastHalfMove.takes.black.length !== blackTakes.length
-      ) {
-        takenPiece = blackTakes.at(-1);
-      }
-
-      if (
-        game.colorToMove === "b" &&
-        lastHalfMove.takes.white.length !== whiteTakes.length
-      ) {
-        takenPiece = whiteTakes.at(-1);
+    const chess = new Chess();
+    chess.setMoves(game.history);
+    const lastMove = game.history.at(-1);
+    if (lastMove) {
+      if (lastMove.black) {
+        chess.setPosition(lastMove.black.state.fen);
+      } else {
+        chess.setPosition(lastMove.white.state.fen);
       }
     }
 
-    const lastMove = game.moves.at(-1);
+    const result = chess.execute(executedMove, { validate: true, silent: true });
+    if (!result) throw new Error("Move is invalid!")
 
-    if (lastMove && !lastMove.black) {
-      game.moves[game.moves.length - 1].black = {
-        fen,
-        takes: {
-          // @ts-ignore
-          white: whiteTakes,
-          // @ts-ignore
-          black: blackTakes,
-        },
-        executedMove,
-      };
-    }
-
-    if (!lastMove || !!lastMove.black) {
-      game.moves.push({
-        white: {
-          fen,
-          takes: {
-            white: whiteTakes,
-            black: blackTakes,
-          },
-          executedMove,
-        },
-      });
-    }
-    game.colorToMove = game.colorToMove === "w" ? "b" : "w";
-
-    await game.save();
+    await GameModel.updateOne({ _id: gameID }, { $set: { history: chess.history(), colorToMove: chess.colorToMove() }});
 
     const emailParams: SendMovePlayerEmailOpts = {
       email: opponent.email,
       firstName: user.firstName,
-      from: this.toAlgebraic(executedMove.from),
-      to: this.toAlgebraic(executedMove.to),
-      piece: executedMove.pieceType,
+      from: executedMove.from,
+      to: executedMove.to,
+      piece: executedMove.piece,
       gameID: game._id.toString(),
-      takenPiece,
+      takenPiece: executedMove.take,
     };
 
     await this.sendMovePlayerEmail(emailParams);
@@ -290,6 +231,10 @@ export class GameResolver {
 
   @FieldResolver(of => Game)
   lastHalfMove(@Root() game: Game) {
-    return this.getLastHalfMove(game.moves);
+    const lastFull = game.history.at(-1);
+    if (lastFull) {
+      if (lastFull.black) return lastFull.black;
+      return lastFull.white;
+    }
   }
 }
