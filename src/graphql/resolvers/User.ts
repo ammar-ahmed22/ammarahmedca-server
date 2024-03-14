@@ -11,38 +11,48 @@ import {
 import UserModel, { RegisterInput, User, UpdateInput } from "../../models/User";
 import { AuthPayload } from "../../utils/auth";
 import transporter, { readHTML, insertParams } from "../../utils/mail";
+import { toHTML, toPlainText } from "../../emails";
+import ConfirmationCode, {
+  ConfirmationCodeProps,
+} from "../../emails/ConfirmationCode";
+import ResetPassword, { ResetPasswordProps } from "../../emails/ResetPassword";
 
 @Resolver()
 export class UserResolver {
   constructor(private mailer = transporter) {}
 
   private sendConfirmationCodeEmail = async (code: number, email: string) => {
-    const html = readHTML("../emails/confirmation-code.html");
-    const updated = insertParams(html, { confirmationCode: code });
+    const html = toHTML<ConfirmationCodeProps>(ConfirmationCode, {
+      confirmationCode: code,
+    });
+    const plainText = toPlainText<ConfirmationCodeProps>(ConfirmationCode, {
+      confirmationCode: code,
+    });
     await this.mailer.sendMail({
       from: "Ammar Ahmed <ammar@ammarahmed.ca>",
       to: email,
       subject: "Confirm your email for ammarahmed.ca",
-      text: "Plain text is not supported yet :(",
-      html: updated,
+      text: plainText,
+      html,
     });
     console.log("confirm email sent to:", email);
   };
 
   private sendResetPasswordEmail = async (token: string, email: string) => {
-    const html = readHTML("../emails/reset-password.html");
-    const updated = insertParams(html, {
-      resetLink:
-        process.env.NODE_ENV === "production"
-          ? `https://ammarahmed.ca/chess/reset-password/${token}`
-          : `http://localhost:3000/chess/reset-password/${token}`,
+    const resetLink =
+      process.env.NODE_ENV === "production"
+        ? `https://ammarahmed.ca/chess/reset-password/${token}`
+        : `http://localhost:3000/chess/reset-password/${token}`;
+    const html = toHTML<ResetPasswordProps>(ResetPassword, { resetLink });
+    const plainText = toPlainText<ResetPasswordProps>(ResetPassword, {
+      resetLink,
     });
     await this.mailer.sendMail({
       from: "Ammar Ahmed <ammar@ammarahmed.ca>",
       to: email,
       subject: "Reset password for ammarahmed.ca",
-      text: "Plain text is not supported yet :(",
-      html: updated,
+      text: plainText,
+      html,
     });
 
     console.log("reset pass email sent to:", email);

@@ -11,14 +11,11 @@ import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
 } from "@apollo/server/plugin/landingPage/default";
-import * as path from "path";
-import fs, { read } from "fs";
 
 import { connect } from "./utils/connectDB";
 import { authChecker } from "./utils/auth";
 
-import { buildSchema } from "type-graphql";
-import { printSchema } from "graphql";
+import { buildSchema, GraphQLTimestamp } from "type-graphql";
 
 import { BlogResolver } from "./graphql/resolvers/Blog";
 import { WebsiteResolver } from "./graphql/resolvers/Website";
@@ -29,11 +26,13 @@ import UserModel from "./models/User";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
+import ConfirmationCode from "./emails/ConfirmationCode";
+import { toHTML, toPlainText } from "./emails";
 
 (async () => {
   const gameSchema = await buildSchema({
     resolvers: [UserResolver, GameResolver],
-    dateScalarMode: "timestamp",
+    scalarsMap: [{ type: Date, scalar: GraphQLTimestamp }],
     authChecker,
     emitSchemaFile: {
       path: __dirname + "/game.gql",
@@ -44,7 +43,7 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
 
   const schema = await buildSchema({
     resolvers: [BlogResolver, WebsiteResolver],
-    dateScalarMode: "timestamp",
+    scalarsMap: [{ type: Date, scalar: GraphQLTimestamp }],
     authChecker,
     emitSchemaFile: {
       path: __dirname + "/schema.gql",

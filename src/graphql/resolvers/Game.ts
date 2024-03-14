@@ -5,24 +5,19 @@ import {
   Query,
   Authorized,
   Ctx,
-  Int,
   ArgsType,
   Field,
-  Args,
   FieldResolver,
   Root,
   ObjectType,
 } from "type-graphql";
 import { AuthPayload } from "../../utils/auth";
-import GameModel, { Game, HalfMove, HalfMoveInput } from "../../models/Game";
+import GameModel, { Game, HalfMoveInput } from "../../models/Game";
 import UserModel from "../../models/User";
-import transporter, {
-  readHTML,
-  insertParams,
-  getParamNames,
-} from "../../utils/mail";
-import { Types } from "mongoose";
-import { Chess } from "@ammar-ahmed22/chess-engine";
+import transporter, { readHTML, insertParams } from "../../utils/mail";
+import { Chess, HalfMove } from "@ammar-ahmed22/chess-engine";
+import { toHTML, toPlainText } from "../../emails";
+import MovePlayed, { MovePlayedProps } from "../../emails/MovePlayed";
 
 @ArgsType()
 class AddMoveArgs {
@@ -40,13 +35,11 @@ class CreateGameResponse {
 }
 
 type SendMovePlayerEmailOpts = {
-  email: string;
+  oppEmail: string;
+  playerEmail: string;
   firstName: string;
-  piece: string;
-  from: string;
-  to: string;
+  movePlayed: HalfMove;
   gameID: string;
-  takenPiece?: string;
 };
 
 @Resolver(of => Game)
@@ -54,36 +47,36 @@ export class GameResolver {
   constructor(private mailer = transporter) {}
 
   private sendMovePlayerEmail = async ({
-    email,
+    oppEmail,
+    playerEmail,
     firstName,
-    from,
-    to,
-    piece,
     gameID,
-    takenPiece,
+    movePlayed,
   }: SendMovePlayerEmailOpts) => {
-    const html = readHTML("../emails/move-played.html");
-    // params: opponent, piece, to, takeDescription, linkToGame, from
-    const params: Record<string, any> = {
-      user: firstName,
-      piece,
-      from,
-      to,
-      linkToGame: `${
-        process.env.NODE_ENV === "production"
-          ? "https://ammarahmed.ca"
-          : "http://localhost:3000"
-      }/chess/play/${gameID}`,
-      takeDescription: takenPiece ? ` and took your ${takenPiece}` : "",
-    };
-    const updated = insertParams(html, params);
+    const gameLink = `${
+      process.env.NODE_ENV === "production"
+        ? "https://ammarahmed.ca"
+        : "http://localhost:3000"
+    }/chess/play/${gameID}`;
+    const html = toHTML<MovePlayedProps>(MovePlayed, {
+      playerName: firstName,
+      playerEmail: playerEmail,
+      gameLink,
+      movePlayed,
+    });
+    const plainText = toPlainText<MovePlayedProps>(MovePlayed, {
+      playerName: firstName,
+      playerEmail: playerEmail,
+      gameLink,
+      movePlayed,
+    });
 
     this.mailer.sendMail({
       from: "Ammar Ahmed <ammar@ammarahmed.ca>",
-      to: email,
+      to: oppEmail,
       subject: `${firstName} Played Their Move!`,
-      text: "Plain text is not supported yet :(",
-      html: updated,
+      text: plainText,
+      html,
     });
   };
 
@@ -91,22 +84,6 @@ export class GameResolver {
     userID: string,
     playerIDs: { white: string; black: string }
   ) => (playerIDs.white === userID ? playerIDs.black : playerIDs.white);
-
-  private toAlgebraic = (a: { rank: number; file: string }) => {
-    return `${a.file}${a.rank}`;
-  };
-
-  // private getLastHalfMove = (moves: Move[]): HalfMove | undefined => {
-  //   const lastMove = moves.at(-1);
-  //   if (lastMove) {
-  //     if (lastMove.black) {
-  //       return lastMove.black;
-  //     }
-
-  //     return lastMove.white;
-  //   }
-  //   return undefined;
-  // };
 
   @Authorized()
   @Mutation(returns => CreateGameResponse, {
@@ -187,13 +164,11 @@ export class GameResolver {
     );
 
     const emailParams: SendMovePlayerEmailOpts = {
-      email: opponent.email,
+      oppEmail: opponent.email,
+      playerEmail: user.email,
       firstName: user.firstName,
-      from: executedMove.from,
-      to: executedMove.to,
-      piece: executedMove.piece,
       gameID: game._id.toString(),
-      takenPiece: executedMove.take,
+      movePlayed: result,
     };
 
     await this.sendMovePlayerEmail(emailParams);
