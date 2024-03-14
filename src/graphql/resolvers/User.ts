@@ -11,11 +11,12 @@ import {
 import UserModel, { RegisterInput, User, UpdateInput } from "../../models/User";
 import { AuthPayload } from "../../utils/auth";
 import transporter, { readHTML, insertParams } from "../../utils/mail";
-import { toHTML, toPlainText } from "../../emails";
+import { toHTML, toPlainText, renderEmail } from "../../emails";
 import ConfirmationCode, {
   ConfirmationCodeProps,
 } from "../../emails/ConfirmationCode";
 import ResetPassword, { ResetPasswordProps } from "../../emails/ResetPassword";
+import PlayerRegistered, { PlayerRegisteredProps } from "../../emails/PlayerRegistered";
 
 @Resolver()
 export class UserResolver {
@@ -57,6 +58,8 @@ export class UserResolver {
 
     console.log("reset pass email sent to:", email);
   };
+
+  
 
   @Mutation(returns => AuthPayload, {
     description: "Register for ammarahmed.ca",
@@ -114,6 +117,24 @@ export class UserResolver {
 
     user.emailConfirmed = true;
     await user.save();
+
+    const { html, plainText } = renderEmail<PlayerRegisteredProps>(PlayerRegistered, {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      middleName: user.middleName,
+      email: user.email,
+      company: user.company,
+      position: user.position,
+      foundBy: user.foundBy
+    })
+
+    await this.mailer.sendMail({
+      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+      to: "a353ahme@uwaterloo.ca",
+      subject: "New player registered for ammarahmed.ca",
+      text: plainText,
+      html,
+    })
 
     return new AuthPayload({ id: user._id });
   }

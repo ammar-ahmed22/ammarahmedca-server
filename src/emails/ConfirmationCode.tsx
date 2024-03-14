@@ -9,7 +9,7 @@ export type ConfirmationCodeProps = React.JSX.IntrinsicAttributes & {
 const ConfirmationCode: React.FC<ConfirmationCodeProps> = ({
   confirmationCode = 123456,
 }) => {
-  const previewText = "Confirm your email for ammarahmed.ca";
+  const previewText = `Confirm your email for ammarahmed.ca. Code: ${confirmationCode}`;
   return (
     <Starter previewText={previewText}>
       <Heading className="text-black text-[24px] text-center font-normal p-0 my-[30px] mx-0">

@@ -17,3 +17,10 @@ export function toPlainText<T extends React.JSX.IntrinsicAttributes>(
   const Component = component;
   return render(<Component {...props} />, { plainText: true });
 }
+
+export function renderEmail<T extends React.JSX.IntrinsicAttributes>(component: React.FC<T>, props: T) {
+  return {
+    html: toHTML<T>(component, props),
+    plainText: toPlainText<T>(component, props)
+  }
+}

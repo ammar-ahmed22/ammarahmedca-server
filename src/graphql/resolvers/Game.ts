@@ -16,8 +16,9 @@ import GameModel, { Game, HalfMoveInput } from "../../models/Game";
 import UserModel from "../../models/User";
 import transporter, { readHTML, insertParams } from "../../utils/mail";
 import { Chess, HalfMove } from "@ammar-ahmed22/chess-engine";
-import { toHTML, toPlainText } from "../../emails";
+import { renderEmail } from "../../emails";
 import MovePlayed, { MovePlayedProps } from "../../emails/MovePlayed";
+import GameCreated, { GameCreatedProps } from "../../emails/GameCreated";
 
 @ArgsType()
 class AddMoveArgs {
@@ -58,13 +59,7 @@ export class GameResolver {
         ? "https://ammarahmed.ca"
         : "http://localhost:3000"
     }/chess/play/${gameID}`;
-    const html = toHTML<MovePlayedProps>(MovePlayed, {
-      playerName: firstName,
-      playerEmail: playerEmail,
-      gameLink,
-      movePlayed,
-    });
-    const plainText = toPlainText<MovePlayedProps>(MovePlayed, {
+    const { html, plainText } = renderEmail<MovePlayedProps>(MovePlayed, {
       playerName: firstName,
       playerEmail: playerEmail,
       gameLink,
@@ -106,11 +101,23 @@ export class GameResolver {
       },
     });
 
-    // user.currentGameID = game._id;
     user.gameIDs.push(game._id);
     me.gameIDs.push(game._id);
     await user.save();
     await me.save();
+
+    const { html, plainText } = renderEmail<GameCreatedProps>(GameCreated, {
+      playerName: user.firstName,
+      playerEmail: user.email
+    })
+
+    await this.mailer.sendMail({
+      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+      to: "a353ahme@uwaterloo.ca",
+      subject: `${user.firstName} created a game!`,
+      text: plainText,
+      html
+    })
 
     console.log("game created with id:", game._id);
     return { gameID: game._id };
