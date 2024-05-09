@@ -4,7 +4,7 @@
 # -----------------------------------------------
 
 type Query {
-  blogMetadata(tags: [String!], category: String, onlyPublished: Boolean): [PostMetadata!]!
+  blogMetadata(query: String, tags: [String!], category: String, onlyPublished: Boolean): [PostMetadata!]!
   postBySlug(slug: String!): Post!
   blogCategories: [String!]!
   blogTags: [String!]!
