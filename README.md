@@ -10,7 +10,8 @@ A high-level overview of the tech stack this website uses:
 [**Front-end**](https://github.com/ammar-ahmed22/ammarahmedca)
 
 - [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/) is used for the functionality of the website.
-- [ChakraUI](https://chakra-ui.com/) is used to create the standardized and aesthetic UI.
+- [TailwindCSS](https://tailwindcss.com/) is used as the UI framework.
+- [NextUI](https://nextui.org) is used to create the standardized and aesthetic UI.
 - [Apollo Client](https://www.apollographql.com/docs/react/) is used to handle making GraphQL requests.
 
 **Back-end**
