@@ -71,8 +71,8 @@ export class GameResolver {
       html,
       plainText,
       subject: `${firstName} Played Their Move!`,
-      to: oppEmail
-    })
+      to: oppEmail,
+    });
   };
 
   private getOpponentGameID = (
@@ -99,7 +99,7 @@ export class GameResolver {
         white: user._id,
         black: me._id,
       },
-      status: "in-progress"
+      status: "in-progress",
     });
 
     user.gameIDs.push(game._id);
@@ -109,15 +109,15 @@ export class GameResolver {
 
     const { html, plainText } = renderEmail<GameCreatedProps>(GameCreated, {
       playerName: user.firstName,
-      playerEmail: user.email
-    })
+      playerEmail: user.email,
+    });
 
     await sendMail(this.mailer, {
       to: "a353ahme@uwaterloo.ca",
       subject: `${user.firstName} created a game!`,
       plainText,
-      html
-    })
+      html,
+    });
 
     console.log("game created with id:", game._id);
     return { gameID: game._id };
@@ -163,7 +163,13 @@ export class GameResolver {
 
     await GameModel.updateOne(
       { _id: gameID },
-      { $set: { history: chess.history(), colorToMove: chess.colorToMove(), status: chess.status() } }
+      {
+        $set: {
+          history: chess.history(),
+          colorToMove: chess.colorToMove(),
+          status: chess.status(),
+        },
+      }
     );
 
     const emailParams: SendMovePlayerEmailOpts = {

@@ -78,6 +78,12 @@ export class WebsiteResolver {
       filter: {
         or: [],
       },
+      sorts: [
+        {
+          property: "Timeframe",
+          direction: "descending",
+        },
+      ],
     });
 
     return response.results.map(page => {
