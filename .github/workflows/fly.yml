@@ -3,6 +3,11 @@ name: Deploy to Fly.io
   push:
     branches:
       - production
+    paths:
+      - src/**
+      - Dockerfile
+      - fly.toml
+      - tsconfig.json
   workflow_dispatch:
 env:
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
