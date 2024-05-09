@@ -25,6 +25,7 @@ import {
   mapRichText,
 } from "../../utils/notion";
 import { PostMetadata, Post } from "../typeDefs/Blog";
+import { containsQuery } from "../../utils/search";
 
 @Resolver()
 export class BlogResolver {
@@ -208,7 +209,8 @@ export class BlogResolver {
   async blogMetadata(
     @Arg("onlyPublished", { nullable: true }) onlyPublished?: boolean,
     @Arg("category", { nullable: true }) category?: string,
-    @Arg("tags", returns => [String], { nullable: true }) tags?: string[]
+    @Arg("tags", returns => [String], { nullable: true }) tags?: string[],
+    @Arg("query", returns => String, { nullable: true }) query?: string
   ): Promise<IPostMetadata[]> {
     const publishedFilter = {
       property: "publish",
@@ -267,7 +269,20 @@ export class BlogResolver {
       })
     );
 
-    return result;
+    return result.filter(result => {
+      if (!query) return true;
+      let match = false;
+      if (containsQuery(query, result.name)) match = true;
+      for (let tag of result.tags) {
+        if (containsQuery(query, tag)) match = true;
+      }
+
+      for (let category of result.category) {
+        if (containsQuery(query, category)) match = true;
+      }
+
+      return match;
+    });
   }
 
   @Query(returns => Post)
