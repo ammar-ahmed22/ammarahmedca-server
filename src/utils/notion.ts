@@ -67,7 +67,7 @@ export const extractPropertyValue = (
       if (process.env.NODE_ENV !== "production") {
         // in prod, time is in UTC, subtract offset
         const offset = new Date().getTimezoneOffset() * 60 * 1000;
-        date.setTime(date.getTime() - offset)
+        date.setTime(date.getTime() - offset);
       }
       return date;
     };

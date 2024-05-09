@@ -11,42 +11,55 @@ import {
 import UserModel, { RegisterInput, User, UpdateInput } from "../../models/User";
 import { AuthPayload } from "../../utils/auth";
 import transporter, { readHTML, insertParams } from "../../utils/mail";
+import { toHTML, toPlainText, renderEmail } from "../../emails";
+import ConfirmationCode, {
+  ConfirmationCodeProps,
+} from "../../emails/ConfirmationCode";
+import ResetPassword, { ResetPasswordProps } from "../../emails/ResetPassword";
+import PlayerRegistered, { PlayerRegisteredProps } from "../../emails/PlayerRegistered";
 
 @Resolver()
 export class UserResolver {
   constructor(private mailer = transporter) {}
 
   private sendConfirmationCodeEmail = async (code: number, email: string) => {
-    const html = readHTML("../emails/confirmation-code.html");
-    const updated = insertParams(html, { confirmationCode: code });
+    const html = toHTML<ConfirmationCodeProps>(ConfirmationCode, {
+      confirmationCode: code,
+    });
+    const plainText = toPlainText<ConfirmationCodeProps>(ConfirmationCode, {
+      confirmationCode: code,
+    });
     await this.mailer.sendMail({
       from: "Ammar Ahmed <ammar@ammarahmed.ca>",
       to: email,
       subject: "Confirm your email for ammarahmed.ca",
-      text: "Plain text is not supported yet :(",
-      html: updated,
+      text: plainText,
+      html,
     });
     console.log("confirm email sent to:", email);
   };
 
   private sendResetPasswordEmail = async (token: string, email: string) => {
-    const html = readHTML("../emails/reset-password.html");
-    const updated = insertParams(html, {
-      resetLink:
-        process.env.NODE_ENV === "production"
-          ? `https://ammarahmed.ca/chess/reset-password/${token}`
-          : `http://localhost:3000/chess/reset-password/${token}`,
+    const resetLink =
+      process.env.NODE_ENV === "production"
+        ? `https://ammarahmed.ca/chess/reset-password/${token}`
+        : `http://localhost:3000/chess/reset-password/${token}`;
+    const html = toHTML<ResetPasswordProps>(ResetPassword, { resetLink });
+    const plainText = toPlainText<ResetPasswordProps>(ResetPassword, {
+      resetLink,
     });
     await this.mailer.sendMail({
       from: "Ammar Ahmed <ammar@ammarahmed.ca>",
       to: email,
       subject: "Reset password for ammarahmed.ca",
-      text: "Plain text is not supported yet :(",
-      html: updated,
+      text: plainText,
+      html,
     });
 
     console.log("reset pass email sent to:", email);
   };
+
+  
 
   @Mutation(returns => AuthPayload, {
     description: "Register for ammarahmed.ca",
@@ -104,6 +117,24 @@ export class UserResolver {
 
     user.emailConfirmed = true;
     await user.save();
+
+    const { html, plainText } = renderEmail<PlayerRegisteredProps>(PlayerRegistered, {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      middleName: user.middleName,
+      email: user.email,
+      company: user.company,
+      position: user.position,
+      foundBy: user.foundBy
+    })
+
+    await this.mailer.sendMail({
+      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+      to: "a353ahme@uwaterloo.ca",
+      subject: "New player registered for ammarahmed.ca",
+      text: plainText,
+      html,
+    })
 
     return new AuthPayload({ id: user._id });
   }

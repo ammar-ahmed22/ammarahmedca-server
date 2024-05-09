@@ -11,14 +11,11 @@ import {
   ApolloServerPluginLandingPageLocalDefault,
   ApolloServerPluginLandingPageProductionDefault,
 } from "@apollo/server/plugin/landingPage/default";
-import * as path from "path";
-import fs, { read } from "fs";
 
 import { connect } from "./utils/connectDB";
 import { authChecker } from "./utils/auth";
 
-import { buildSchema } from "type-graphql";
-import { printSchema } from "graphql";
+import { buildSchema, GraphQLTimestamp } from "type-graphql";
 
 import { BlogResolver } from "./graphql/resolvers/Blog";
 import { WebsiteResolver } from "./graphql/resolvers/Website";
@@ -29,22 +26,37 @@ import UserModel from "./models/User";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
+import ConfirmationCode from "./emails/ConfirmationCode";
+import { toHTML, toPlainText } from "./emails";
 
 (async () => {
+  const gameSchema = await buildSchema({
+    resolvers: [UserResolver, GameResolver],
+    scalarsMap: [{ type: Date, scalar: GraphQLTimestamp }],
+    authChecker,
+    emitSchemaFile: {
+      path: __dirname + "/game.gql",
+      sortedSchema: false,
+    },
+    validate: true,
+  });
+
   const schema = await buildSchema({
-    resolvers: [BlogResolver, WebsiteResolver, UserResolver, GameResolver],
-    dateScalarMode: "timestamp",
+    resolvers: [BlogResolver, WebsiteResolver],
+    scalarsMap: [{ type: Date, scalar: GraphQLTimestamp }],
     authChecker,
     emitSchemaFile: {
       path: __dirname + "/schema.gql",
       sortedSchema: false,
     },
+    validate: true,
   });
+
   if (EMIT_SCHEMA) return;
   const app = express();
 
-  const server = new ApolloServer<Context>({
-    schema,
+  const gameServer = new ApolloServer<Context>({
+    schema: gameSchema,
     introspection: true,
     plugins: [
       process.env.NODE_ENV === "production"
@@ -70,6 +82,19 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
       }
       return formattedError;
     },
+  });
+
+  const server = new ApolloServer({
+    schema,
+    introspection: true,
+    plugins: [
+      process.env.NODE_ENV === "production"
+        ? ApolloServerPluginLandingPageProductionDefault({
+            graphRef: "ammarahmedca-api-v2@production",
+            footer: false,
+          })
+        : ApolloServerPluginLandingPageLocalDefault(),
+    ],
   });
 
   if (process.env.NODE_ENV !== "production") {
@@ -108,12 +133,13 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
   }
 
   await server.start();
+  await gameServer.start();
 
   app.use(
-    "/",
+    "/game",
     cors<cors.CorsRequest>(),
     express.json({ limit: "10mb" }),
-    expressMiddleware<Context>(server, {
+    expressMiddleware<Context>(gameServer, {
       context: async ({ req }) => {
         if (
           !req.headers.authorization ||
@@ -132,6 +158,13 @@ const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
         };
       },
     })
+  );
+
+  app.use(
+    "/",
+    cors<cors.CorsRequest>(),
+    express.json({ limit: "10mb" }),
+    expressMiddleware(server)
   );
 
   app.listen(PORT, () =>
