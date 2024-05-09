@@ -16,7 +16,9 @@ import ConfirmationCode, {
   ConfirmationCodeProps,
 } from "../../emails/ConfirmationCode";
 import ResetPassword, { ResetPasswordProps } from "../../emails/ResetPassword";
-import PlayerRegistered, { PlayerRegisteredProps } from "../../emails/PlayerRegistered";
+import PlayerRegistered, {
+  PlayerRegisteredProps,
+} from "../../emails/PlayerRegistered";
 import { Context } from "../../types/Context";
 
 @Resolver()
@@ -34,8 +36,8 @@ export class UserResolver {
       to: email,
       subject: `Confirm your email for ammarahmed.ca`,
       plainText,
-      html
-    })
+      html,
+    });
     console.log("confirm email sent to:", email);
   };
 
@@ -52,13 +54,11 @@ export class UserResolver {
       to: email,
       subject: `Reset password for ammarahmed.ca`,
       plainText,
-      html
-    })
+      html,
+    });
 
     console.log("reset pass email sent to:", email);
   };
-
-  
 
   @Mutation(returns => AuthPayload, {
     description: "Register for ammarahmed.ca",
@@ -117,22 +117,25 @@ export class UserResolver {
     user.emailConfirmed = true;
     await user.save();
 
-    const { html, plainText } = renderEmail<PlayerRegisteredProps>(PlayerRegistered, {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      middleName: user.middleName,
-      email: user.email,
-      company: user.company,
-      position: user.position,
-      foundBy: user.foundBy
-    })
+    const { html, plainText } = renderEmail<PlayerRegisteredProps>(
+      PlayerRegistered,
+      {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        middleName: user.middleName,
+        email: user.email,
+        company: user.company,
+        position: user.position,
+        foundBy: user.foundBy,
+      }
+    );
 
     await sendMail(this.mailer, {
       to: "a353ahme@uwaterloo.ca",
       subject: "New player registered for ammarahmed.ca",
       plainText,
-      html
-    })
+      html,
+    });
 
     return new AuthPayload({ id: user._id });
   }

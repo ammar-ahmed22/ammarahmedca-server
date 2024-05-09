@@ -18,14 +18,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendMail = async (transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo>, opts: { html: string, plainText: string, subject: string, to: string }) => {
+export const sendMail = async (
+  transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo>,
+  opts: { html: string; plainText: string; subject: string; to: string }
+) => {
   await transporter.sendMail({
     from: "ammarahmed.ca <ammar@ammarahmed.ca>",
     to: opts.to,
     html: opts.html,
     text: opts.plainText,
-    subject: opts.subject
+    subject: opts.subject,
   });
-}
+};
 
 export default transporter;
