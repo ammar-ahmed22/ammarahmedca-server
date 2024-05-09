@@ -24,6 +24,9 @@ import { GameResolver } from "./graphql/resolvers/Game";
 
 import UserModel from "./models/User";
 
+import { Context } from "./types/Context";
+import { JWTUserPayload } from "./types/auth";
+
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const EMIT_SCHEMA = process.env.EMIT_SCHEMA ? true : false;
 import ConfirmationCode from "./emails/ConfirmationCode";
@@ -101,7 +104,7 @@ import { toHTML, toPlainText } from "./emails";
     if (process.env.MONGO_URI) await connect(process.env.MONGO_URI);
     // Creating my own user and a test user
     const exists = await UserModel.findOne({ email: "a353ahme@uwaterloo.ca" });
-    const testExists = await UserModel.findOne({ email: "ammar@fragbuy.ca" });
+    // const testExists = await UserModel.findOne({ email: "ammar@fragbuy.ca" });
 
     if (!exists && process.env.MY_USER_PASS) {
       await UserModel.create({
@@ -117,19 +120,19 @@ import { toHTML, toPlainText } from "./emails";
       console.log("my user created!");
     }
 
-    if (!testExists && process.env.MY_USER_PASS) {
-      await UserModel.create({
-        firstName: "Test",
-        lastName: "Testerman",
-        company: "Test Inc.",
-        position: "Tester",
-        email: "ammar@fragbuy.ca",
-        emailConfirmed: true,
-        password: process.env.MY_USER_PASS,
-      });
+    // if (!testExists && process.env.MY_USER_PASS) {
+    //   await UserModel.create({
+    //     firstName: "Test",
+    //     lastName: "Testerman",
+    //     company: "Test Inc.",
+    //     position: "Tester",
+    //     email: "ammar@fragbuy.ca",
+    //     emailConfirmed: true,
+    //     password: process.env.MY_USER_PASS,
+    //   });
 
-      console.log("test user created!");
-    }
+    //   console.log("test user created!");
+    // }
   }
 
   await server.start();

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { AuthChecker, ObjectType, Field } from "type-graphql";
+import { Context } from "../types/Context";
 
 export const authChecker: AuthChecker<Context> = ({ context }): boolean =>
   !!context.userId;

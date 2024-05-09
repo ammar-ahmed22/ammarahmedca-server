@@ -10,13 +10,14 @@ import {
 } from "type-graphql";
 import UserModel, { RegisterInput, User, UpdateInput } from "../../models/User";
 import { AuthPayload } from "../../utils/auth";
-import transporter, { readHTML, insertParams } from "../../utils/mail";
+import transporter, { sendMail } from "../../utils/mail";
 import { toHTML, toPlainText, renderEmail } from "../../emails";
 import ConfirmationCode, {
   ConfirmationCodeProps,
 } from "../../emails/ConfirmationCode";
 import ResetPassword, { ResetPasswordProps } from "../../emails/ResetPassword";
 import PlayerRegistered, { PlayerRegisteredProps } from "../../emails/PlayerRegistered";
+import { Context } from "../../types/Context";
 
 @Resolver()
 export class UserResolver {
@@ -29,13 +30,12 @@ export class UserResolver {
     const plainText = toPlainText<ConfirmationCodeProps>(ConfirmationCode, {
       confirmationCode: code,
     });
-    await this.mailer.sendMail({
-      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+    await sendMail(this.mailer, {
       to: email,
-      subject: "Confirm your email for ammarahmed.ca",
-      text: plainText,
-      html,
-    });
+      subject: `Confirm your email for ammarahmed.ca`,
+      plainText,
+      html
+    })
     console.log("confirm email sent to:", email);
   };
 
@@ -48,13 +48,12 @@ export class UserResolver {
     const plainText = toPlainText<ResetPasswordProps>(ResetPassword, {
       resetLink,
     });
-    await this.mailer.sendMail({
-      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+    await sendMail(this.mailer, {
       to: email,
-      subject: "Reset password for ammarahmed.ca",
-      text: plainText,
-      html,
-    });
+      subject: `Reset password for ammarahmed.ca`,
+      plainText,
+      html
+    })
 
     console.log("reset pass email sent to:", email);
   };
@@ -128,12 +127,11 @@ export class UserResolver {
       foundBy: user.foundBy
     })
 
-    await this.mailer.sendMail({
-      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+    await sendMail(this.mailer, {
       to: "a353ahme@uwaterloo.ca",
       subject: "New player registered for ammarahmed.ca",
-      text: plainText,
-      html,
+      plainText,
+      html
     })
 
     return new AuthPayload({ id: user._id });

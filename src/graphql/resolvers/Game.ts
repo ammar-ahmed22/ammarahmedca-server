@@ -14,11 +14,12 @@ import {
 import { AuthPayload } from "../../utils/auth";
 import GameModel, { Game, HalfMoveInput } from "../../models/Game";
 import UserModel from "../../models/User";
-import transporter, { readHTML, insertParams } from "../../utils/mail";
+import transporter, { sendMail } from "../../utils/mail";
 import { Chess, HalfMove } from "@ammar-ahmed22/chess-engine";
 import { renderEmail } from "../../emails";
 import MovePlayed, { MovePlayedProps } from "../../emails/MovePlayed";
 import GameCreated, { GameCreatedProps } from "../../emails/GameCreated";
+import { Context } from "../../types/Context";
 
 @ArgsType()
 class AddMoveArgs {
@@ -66,13 +67,12 @@ export class GameResolver {
       movePlayed,
     });
 
-    this.mailer.sendMail({
-      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
-      to: oppEmail,
-      subject: `${firstName} Played Their Move!`,
-      text: plainText,
+    await sendMail(this.mailer, {
       html,
-    });
+      plainText,
+      subject: `${firstName} Played Their Move!`,
+      to: oppEmail
+    })
   };
 
   private getOpponentGameID = (
@@ -94,11 +94,12 @@ export class GameResolver {
     //   throw new Error("A game is active. Cannot create another.");
 
     const game = await GameModel.create({
-      colorToMove: "w",
+      colorToMove: "white",
       playerIDs: {
         white: user._id,
         black: me._id,
       },
+      status: "in-progress"
     });
 
     user.gameIDs.push(game._id);
@@ -111,11 +112,10 @@ export class GameResolver {
       playerEmail: user.email
     })
 
-    await this.mailer.sendMail({
-      from: "Ammar Ahmed <ammar@ammarahmed.ca>",
+    await sendMail(this.mailer, {
       to: "a353ahme@uwaterloo.ca",
       subject: `${user.firstName} created a game!`,
-      text: plainText,
+      plainText,
       html
     })
 
@@ -152,11 +152,7 @@ export class GameResolver {
     chess.setMoves(game.history);
     const lastMove = game.history.at(-1);
     if (lastMove) {
-      if (lastMove.black) {
-        chess.setPosition(lastMove.black.state.fen);
-      } else {
-        chess.setPosition(lastMove.white.state.fen);
-      }
+      chess.setPosition(lastMove.state.fen);
     }
 
     const result = chess.execute(executedMove, {
@@ -167,7 +163,7 @@ export class GameResolver {
 
     await GameModel.updateOne(
       { _id: gameID },
-      { $set: { history: chess.history(), colorToMove: chess.colorToMove() } }
+      { $set: { history: chess.history(), colorToMove: chess.colorToMove(), status: chess.status() } }
     );
 
     const emailParams: SendMovePlayerEmailOpts = {
@@ -216,10 +212,7 @@ export class GameResolver {
 
   @FieldResolver(of => Game)
   lastHalfMove(@Root() game: Game) {
-    const lastFull = game.history.at(-1);
-    if (lastFull) {
-      if (lastFull.black) return lastFull.black;
-      return lastFull.white;
-    }
+    const last = game.history.at(-1);
+    return last;
   }
 }
