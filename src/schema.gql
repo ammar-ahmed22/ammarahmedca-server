@@ -46,6 +46,9 @@ type RichText {
 
   """Inline Latex boolean"""
   inlineLatex: Boolean
+
+  """Icon for callouts"""
+  calloutIcon: String
 }
 
 """Object containing properties for rich text."""

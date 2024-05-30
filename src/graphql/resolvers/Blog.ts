@@ -128,13 +128,24 @@ export class BlogResolver {
             block.type === "heading_2" ||
             block.type === "heading_3" ||
             block.type === "paragraph" ||
-            block.type === "quote"
+            block.type === "quote" ||
+            block.type === "callout"
           ) {
             const type = block.type;
+            let calloutIcon: string | undefined;
+            if (type === "callout") {
+              if (block.callout.icon?.type === "emoji") {
+                calloutIcon = block.callout.icon.emoji;
+              } else if (block.callout.icon?.type === "external") {
+                calloutIcon = block.callout.icon.external.url;
+              } else if (block.callout.icon?.type === "file") {
+                calloutIcon = block.callout.icon.file.url;
+              }
+            }
             return {
               type: block.type,
               content: block[type].rich_text.map((r: RichTextItemResponse) =>
-                mapRichText(r)
+                mapRichText(r, undefined, calloutIcon)
               ),
             };
           }
@@ -199,6 +210,10 @@ export class BlogResolver {
               content: block.code.rich_text.map(r => mapRichText(r, language)),
             };
           }
+
+          // if (block.type === "callout") {
+          //   console.log(block.callout.icon);
+          // }
         })
         .filter(b => b !== undefined)
     )) as IUnmergedBlock[];

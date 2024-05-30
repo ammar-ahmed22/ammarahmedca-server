@@ -44,6 +44,9 @@ export class RichText implements IRichText {
 
   @Field({ description: "Inline Latex boolean", nullable: true })
   inlineLatex?: boolean;
+
+  @Field({ description: "Icon for callouts", nullable: true })
+  calloutIcon?: string;
 }
 
 @ObjectType({ description: "Object containing image properties." })
