@@ -21,13 +21,15 @@ import { isFullUser, Client, isFullBlock } from "@notionhq/client";
  */
 export const mapRichText = (
   item: RichTextItemResponse,
-  language?: string
+  language?: string,
+  calloutIcon?: string
 ): IRichText => {
   return {
     plainText: item.plain_text,
     annotations: { ...item.annotations, language },
     href: item.href ?? undefined,
     inlineLatex: item.type === "equation",
+    calloutIcon,
   };
 };
 
