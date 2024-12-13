@@ -12,10 +12,10 @@
   resolved "https://registry.yarnpkg.com/@ammar-ahmed22/chess-engine/-/chess-engine-1.1.0.tgz#88a1ff80f8a73d6c2ba42e48a78e5be72a8df407"
   integrity sha512-sqFPsx2rzwfinJ59ZYI9X/SsEnVe5OcBLQpOmb6sKkIN8mttWoRXJauK+gb8XAzFrk5LZEW2IG6H/E1jT5ruyQ==
 
-"@ammarahmedca/types@^0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@ammarahmedca/types/-/types-0.0.15.tgz#8b4485462adb87b5509fd57d7950c61f5aae95c6"
-  integrity sha512-pygZUhHNV5k5F0Z5xa6cLCyFQv5Fnx4+92LHMnpVoRclurBSghrdOjfBZna6V8k91ZQmx42FEkQwtED2aupTEg==
+"@ammarahmedca/types@^0.0.16":
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/@ammarahmedca/types/-/types-0.0.16.tgz#801a9a237a7308e090ce8a8786ce222a880c63db"
+  integrity sha512-M35xiDPSwRSV8FfGYNFLCUQedI2Z1IdMWe91QHchzRc7sE3rzEAQscJQU3Wp9K3RYNolEiYwVCsMRf7sDbXrLA==
   dependencies:
     "@notionhq/client" "^2.2.3"
     asynckit "^0.4.0"

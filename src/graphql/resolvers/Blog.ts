@@ -174,6 +174,19 @@ export class BlogResolver {
               };
             }
           }
+          if (block.type === "video") {
+              if (block.video.type === "file") {
+                  return {
+                      type: "video",
+                      content: [
+                          {
+                              url: block.video.file.url,
+                              caption: block.video.caption.map(r => mapRichText(r))
+                          }
+                      ]
+                  }
+              }
+          }
 
           if (
             block.type === "bulleted_list_item" ||
